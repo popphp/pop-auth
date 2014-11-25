@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "popphp/pop-db": "2.0.0a"
+        "popphp/pop-db": "~2.0"
     },
     "autoload": {
         "psr-4": {
