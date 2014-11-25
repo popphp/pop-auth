@@ -1,0 +1,24 @@
+{
+    "name": "popphp/pop-auth",
+    "description": "Pop Auth Component for Pop PHP Framework 2",
+    "keywords": [
+        "authentication",
+        "authorization",
+        "php",
+        "pop",
+        "pop php",
+        "pop php 2"
+    ],
+    "homepage": "http://www.popphp.org/",
+    "license": "New BSD",
+    "authors": [
+        {
+            "name": "Nick Sagona",
+            "email": "dev@nolainteractive.com",
+            "homepage": "http://www.nolainteractive.com/"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    }
+}
