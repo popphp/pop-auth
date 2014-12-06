@@ -1,13 +1,12 @@
 {
     "name": "popphp/pop-auth",
-    "description": "Pop Auth Component for Pop PHP Framework 2",
+    "description": "Pop Auth Component for Pop PHP Framework",
     "keywords": [
         "authentication",
         "authorization",
         "php",
         "pop",
-        "pop php",
-        "pop php 2"
+        "pop php"
     ],
     "homepage": "http://www.popphp.org/",
     "license": "New BSD",
