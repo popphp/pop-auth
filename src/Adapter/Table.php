@@ -47,6 +47,12 @@ class Table extends EncryptedAdapter
     protected $passwordField = 'password';
 
     /**
+     * DB table name / class name
+     * @var \Pop\Db\Record
+     */
+    protected $user = null;
+
+    /**
      * Constructor
      *
      * Instantiate the Table auth adapter object
@@ -93,6 +99,16 @@ class Table extends EncryptedAdapter
     }
 
     /**
+     * Get the user object
+     *
+     * @return \Pop\Db\Record
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
      * Set the table name
      *
      * @param string $table
@@ -135,13 +151,13 @@ class Table extends EncryptedAdapter
      */
     public function authenticate()
     {
-        $table = $this->table;
-        $user  = $table::findBy([
+        $table      = $this->table;
+        $this->user = $table::findBy([
             $this->usernameField => $this->username
         ]);
 
-        return (int)(isset($user->{$this->usernameField}) &&
-            $this->verifyPassword($user->{$this->passwordField}, $this->password));
+        return (int)(isset($this->user->{$this->usernameField}) &&
+            $this->verifyPassword($this->user->{$this->passwordField}, $this->password));
     }
 
 }
