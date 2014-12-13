@@ -29,6 +29,20 @@ class Auth
 {
 
     /**
+     * Encryption constants
+     * @var int
+     */
+    const ENCRYPT_NONE          = 0;
+    const ENCRYPT_MD5           = 1;
+    const ENCRYPT_SHA1          = 2;
+    const ENCRYPT_CRYPT         = 3;
+    const ENCRYPT_BCRYPT        = 4;
+    const ENCRYPT_MCRYPT        = 5;
+    const ENCRYPT_CRYPT_MD5     = 6;
+    const ENCRYPT_CRYPT_SHA_256 = 7;
+    const ENCRYPT_CRYPT_SHA_512 = 8;
+
+    /**
      * Constant for credentials not being valid
      * @var int
      */
@@ -57,7 +71,7 @@ class Auth
      *
      * Instantiate the auth object
      *
-     * @param Adapter\AbstractAdapter $adapter
+     * @param  Adapter\AbstractAdapter $adapter
      * @return Auth
      */
     public function __construct(Adapter\AbstractAdapter $adapter)

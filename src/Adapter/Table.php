@@ -25,7 +25,7 @@ namespace Pop\Auth\Adapter;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Table extends AbstractAdapter
+class Table extends LocalAdapter
 {
 
     /**
@@ -137,13 +137,12 @@ class Table extends AbstractAdapter
     public function authenticate()
     {
         $table = $this->table;
-
-        $user = $table::findBy([
-            $this->usernameField => $this->username,
-            $this->passwordField => $this->password
+        $user  = $table::findBy([
+            $this->usernameField => $this->username
         ]);
 
-        return (int)(isset($user->{$this->usernameField}));
+        return (int)(isset($user->{$this->usernameField}) &&
+            $this->verifyPassword($user->{$passwordField}, $this->password));
     }
 
 }

@@ -25,38 +25,14 @@ namespace Pop\Auth\Adapter;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class File extends AbstractAdapter
+class File extends LocalAdapter
 {
-
-    /**
-     * Constant for MD5 encryption
-     * @var string
-     */
-    const ENCRYPT_MD5 = 'ENCRYPT_MD5';
-
-    /**
-     * Constant for MD5 encryption
-     * @var string
-     */
-    const ENCRYPT_SHA1 = 'ENCRYPT_SHA1';
-
-    /**
-     * Constant for no encryption
-     * @var string
-     */
-    const ENCRYPT_NONE = 'ENCRYPT_NONE';
 
     /**
      * Auth file
      * @var string
      */
     protected $filename = null;
-
-    /**
-     * Auth file encryption
-     * @var string
-     */
-    protected $encryption = 'ENCRYPT_MD5';
 
     /**
      * Auth realm
@@ -76,23 +52,19 @@ class File extends AbstractAdapter
      * Instantiate the File auth adapter object
      *
      * @param  string $filename
-     * @param  array  $options
+     * @param  string $delimiter
+     * @param  string $realm
      * @return File
      */
-    public function __construct($filename, array $options = null)
+    public function __construct($filename, $delimiter = null, $realm = null)
     {
         $this->setFilename($filename);
 
-        if (null !== $options) {
-            if (isset($options['encryption'])) {
-                $this->setEncryption($options['encryption']);
-            }
-            if (isset($options['realm'])) {
-                $this->setRealm($options['realm']);
-            }
-            if (isset($options['delimiter'])) {
-                $this->setDelimiter($options['delimiter']);
-            }
+        if (null !== $delimiter) {
+            $this->setDelimiter($delimiter);
+        }
+        if (null !== $realm) {
+            $this->setRealm($realm);
         }
     }
 
@@ -104,16 +76,6 @@ class File extends AbstractAdapter
     public function getFilename()
     {
         return $this->filename;
-    }
-
-    /**
-     * Get the auth encryption
-     *
-     * @return string
-     */
-    public function getEncryption()
-    {
-        return $this->encryption;
     }
 
     /**
@@ -154,18 +116,6 @@ class File extends AbstractAdapter
     }
 
     /**
-     * Set the auth encryption
-     *
-     * @param string $encryption
-     * @return File
-     */
-    public function setEncryption($encryption)
-    {
-        $this->encryption = $encryption;
-        return $this;
-    }
-
-    /**
      * Set the auth realm
      *
      * @param string $realm
@@ -196,33 +146,19 @@ class File extends AbstractAdapter
      */
     public function authenticate()
     {
-        $string = $this->username . $this->delimiter;
-        $hash   = $this->username . $this->delimiter;
-
-        if (null !== $this->realm) {
-            $string .= $this->realm . $this->delimiter;
-            $hash   .= $this->realm . $this->delimiter;
-        }
-
-        $hash .= $this->password;
-
-        switch ($this->encryption) {
-            case self::ENCRYPT_MD5:
-                $hash = md5($hash);
-                break;
-
-            case self::ENCRYPT_SHA1:
-                $hash = sha1($hash);
-                break;
-        }
-
-        $string .= $hash;
         $lines = file($this->filename);
 
         $result = 0;
         foreach ($lines as $line) {
-            if (trim($line) == $string) {
-                $result = 1;
+            $user = explode($this->delimiter, trim($line));
+            if ((null !== $this->realm) && (count($user) == 3)) {
+                $password = $user[2];
+                $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
+                $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+            } else if (count($user) == 2) {
+                $password = $user[1];
+                $string = $this->username . $this->delimiter . $password;
+                $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
             }
         }
 

@@ -19,6 +19,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
+        "popphp/pop-crypt": "2.*@dev",
         "popphp/pop-db": "2.*@dev"
     },
     "autoload": {
