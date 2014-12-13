@@ -25,7 +25,7 @@ namespace Pop\Auth\Adapter;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Table extends LocalAdapter
+class Table extends EncryptedAdapter
 {
 
     /**
@@ -51,16 +51,15 @@ class Table extends LocalAdapter
      *
      * Instantiate the Table auth adapter object
      *
-     * @param string $table
-     * @param string $usernameField
-     * @param string $passwordField
+     * @param  string $table
+     * @param  int    $encryption
+     * @param  array  $options
      * @return Table
      */
-    public function __construct($table, $usernameField = 'username', $passwordField = 'password')
+    public function __construct($table, $encryption = 0, array $options = [])
     {
         $this->setTable($table);
-        $this->setUsernameField($usernameField);
-        $this->setPasswordField($passwordField);
+        $this->setEncryption($encryption, $options);
     }
 
     /**
@@ -142,7 +141,7 @@ class Table extends LocalAdapter
         ]);
 
         return (int)(isset($user->{$this->usernameField}) &&
-            $this->verifyPassword($user->{$passwordField}, $this->password));
+            $this->verifyPassword($user->{$this->passwordField}, $this->password));
     }
 
 }

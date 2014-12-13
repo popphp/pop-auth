@@ -28,7 +28,7 @@ use Pop\Crypt;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-abstract class LocalAdapter extends AbstractAdapter
+abstract class EncryptedAdapter extends AbstractAdapter
 {
 
     /**
@@ -59,15 +59,18 @@ abstract class LocalAdapter extends AbstractAdapter
     /**
      * Method to set the encryption
      *
-     * @param  int $encryption
+     * @param  int   $encryption
+     * @param  array $options
      * @return AbstractAdapter
      */
-    public function setEncryption($encryption = 0)
+    public function setEncryption($encryption = 0, array $options = [])
     {
         $enc = (int)$encryption;
         if (($enc >= 0) && ($enc <= 8)) {
             $this->encryption = $enc;
         }
+
+        $this->setEncryptionOptions($options);
 
         return $this;
     }
