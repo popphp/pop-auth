@@ -146,14 +146,16 @@ class File extends EncryptedAdapter
         foreach ($lines as $line) {
             $line = trim($line);
             $user = explode($this->delimiter, $line);
-            if ((null !== $this->realm) && (count($user) == 3)) {
-                $password = $user[2];
-                $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
-                $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
-            } else if (count($user) == 2) {
-                $password = $user[1];
-                $string = $this->username . $this->delimiter . $password;
-                $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+            if (isset($user[0]) && ($user[0] == $this->username)) {
+                if ((null !== $this->realm) && (count($user) == 3)) {
+                    $password = $user[2];
+                    $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
+                    $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                } else if (count($user) == 2) {
+                    $password = $user[1];
+                    $string = $this->username . $this->delimiter . $password;
+                    $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                }
             }
         }
 
