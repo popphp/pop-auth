@@ -6,12 +6,13 @@ Pop Auth Component
 OVERVIEW
 --------
 Pop Auth is a component of the Pop PHP Framework 2. It provides integrated adapters to authenticate users
-with a file, a database, over HTTP or with a LDAP server. It includes support for encrypted passwords.
+with a file, a database, over HTTP or with a LDAP server. It also includes support for authenticating
+using encrypted passwords.
 
 INSTALL
 -------
 
-Install `Pop auth` using Composer.
+Install `Pop Auth` using Composer.
 
     composer require popphp/pop-auth
 
@@ -20,7 +21,7 @@ BASIC USAGE
 
 ### Authenticate using a file
 
-For this example, we can use a file called '.htmyauth' containing a colon delimited
+For this example, we use a file called '.htmyauth' containing a colon-delimited
 list of usernames and passwords (normally, we wouldn't use clear text):
   
     admin:12admin34
@@ -40,7 +41,7 @@ if ($auth->isValid()) { } // Returns true
 ### Authenticate using a table in a database and encryption
 
 For this example, there is a table in a database called 'users' and a correlating table class
-called 'MyApp\Users' that extends 'Pop\Db\Record' (for more on this, visit the Pop DB component.)
+called 'MyApp\Users' that extends 'Pop\Db\Record' (for more on this, visit the Pop Db component.)
 
 For simplicity, the table has a column called 'username' and a column called 'password.'
 The value of the 'password' column is encrypted using bcrypt. These are all options that
@@ -53,16 +54,18 @@ use Pop\Auth\Adapter\Table;
 
 $auth = new Auth(new Table('MyApp\Users'), Auth::ENCRYPT_BCRYPT);
 
-// Returns false because the value of the hashed attempted
-// password does not match the hash in the database
+// Attempt #1
 $auth->authenticate('admin', 'bad-password');
 
+// Returns false because the value of the hashed attempted
+// password does not match the hash in the database
 if ($auth->isValid()) { }
+
+// Attempt #2
+$auth->authenticate('admin', '12admin34');
 
 // Returns true because the value of the hashed attempted
 // password matches the hash in the database
-$auth->authenticate('admin', '12admin34');
-
 if ($auth->isValid()) { } 
 ```
 
@@ -85,8 +88,8 @@ if ($auth->isValid()) { } // Returns true
 ### Authenticate using LDAP
 
 Again, in this example, the user can simply authenticate using a remote server, but this
-time, using LDAP. The user can set various options that may be necessary to communicate
-with the LDAP server.
+time, using LDAP. The user can set the port and other various options that may be necessary
+to communicate with the LDAP server.
 
 ```php
 use Pop\Auth\Auth;
