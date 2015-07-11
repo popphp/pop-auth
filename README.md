@@ -9,7 +9,7 @@ OVERVIEW
 over HTTP or with a LDAP server. It also includes support for authenticating using
 encrypted passwords.
 
-`pop-auth` is a component of the [Pop PHP Framework 2](http://www.popphp.org/).
+`pop-auth` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
 INSTALL
 -------
