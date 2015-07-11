@@ -14,7 +14,7 @@ encrypted passwords.
 INSTALL
 -------
 
-Install `Pop Auth` using Composer.
+Install `pop-auth` using Composer.
 
     composer require popphp/pop-auth
 
