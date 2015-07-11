@@ -1,13 +1,15 @@
-Pop Auth
+pop-auth
 ========
 
 [![Build Status](https://travis-ci.org/popphp/pop-auth.svg?branch=master)](https://travis-ci.org/popphp/pop-auth)
 
 OVERVIEW
 --------
-Pop Auth is a component of the Pop PHP Framework 2. It provides integrated adapters to authenticate users
-with a file, a database, over HTTP or with a LDAP server. It also includes support for authenticating
-using encrypted passwords.
+`pop-auth` provides integrated adapters to authenticate users with a file, a database,
+over HTTP or with a LDAP server. It also includes support for authenticating using
+encrypted passwords.
+
+`pop-auth` is a component of the [Pop PHP Framework 2](http://www.popphp.org/).
 
 INSTALL
 -------
