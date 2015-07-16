@@ -2,6 +2,7 @@ pop-auth
 ========
 
 [![Build Status](https://travis-ci.org/popphp/pop-auth.svg?branch=master)](https://travis-ci.org/popphp/pop-auth)
+[![Coverage Status](http://www.popphp.org/cc/coverage.php?comp=pop-auth)](http://www.popphp.org/cc/pop-auth/)
 
 OVERVIEW
 --------
