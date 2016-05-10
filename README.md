@@ -2,7 +2,7 @@ pop-auth
 ========
 
 [![Build Status](https://travis-ci.org/popphp/pop-auth.svg?branch=master)](https://travis-ci.org/popphp/pop-auth)
-[![Coverage Status](http://www.popphp.org/cc/coverage.php?comp=pop-auth)](http://www.popphp.org/cc/pop-auth/)
+[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-auth)](http://cc.popphp.org/pop-auth/)
 
 OVERVIEW
 --------
@@ -26,7 +26,7 @@ BASIC USAGE
 
 For this example, we use a file called '.htmyauth' containing a colon-delimited
 list of usernames and passwords (normally, we wouldn't use clear text):
-  
+
     admin:12admin34
     editor:12edit34
     reader:12read34
@@ -38,7 +38,7 @@ use Pop\Auth\Adapter\File;
 $auth = new Auth(new File('/path/to/.htmyauth'));
 $auth->authenticate('admin', '12admin34');
 
-if ($auth->isValid()) { } // Returns true 
+if ($auth->isValid()) { } // Returns true
 ```
 
 ### Authenticate using a table in a database and encryption
@@ -69,7 +69,7 @@ $auth->authenticate('admin', '12admin34');
 
 // Returns true because the value of the hashed attempted
 // password matches the hash in the database
-if ($auth->isValid()) { } 
+if ($auth->isValid()) { }
 ```
 
 ### Authenticate using HTTP
@@ -85,7 +85,7 @@ use Pop\Auth\Adapter\Http;
 $auth = new Auth(new Http('https://www.domain.com/auth', 'post'));
 $auth->authenticate('admin', '12admin34');
 
-if ($auth->isValid()) { } // Returns true 
+if ($auth->isValid()) { } // Returns true
 ```
 
 ### Authenticate using LDAP
@@ -101,5 +101,5 @@ use Pop\Auth\Adapter\Ldap;
 $auth = new Auth(new Ldap('ldap.domain', 389, [LDAP_OPT_PROTOCOL_VERSION => 3]));
 $auth->authenticate('admin', '12admin34');
 
-if ($auth->isValid()) { } // Returns true 
+if ($auth->isValid()) { } // Returns true
 ```
