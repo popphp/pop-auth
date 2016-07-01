@@ -68,8 +68,10 @@ class Ldap extends AbstractAdapter
             $this->setPort($port);
         }
 
-        $host = (null !== $this->port) ? $this->host . ':' . $this->port : $this->host;
-        $this->resource = ldap_connect($host);
+        if ($host != '') {
+            $host = (null !== $this->port) ? $this->host . ':' . $this->port : $this->host;
+            $this->resource = ldap_connect($host);
+        }
 
         if (null !== $options) {
             $this->setOptions($options);
