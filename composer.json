@@ -19,8 +19,8 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "popphp/pop-crypt": "2.*@dev",
-        "popphp/pop-db": "2.*@dev"
+        "popphp/pop-crypt": "2.1.*",
+        "popphp/pop-db": "2.1.*"
     },
     "autoload": {
         "psr-4": {
@@ -37,7 +37,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.0.x-dev"
+            "dev-master": "2.1.x-dev"
         }
     }
 }
