@@ -20,7 +20,7 @@
     "require": {
         "php": ">=5.4.0",
         "popphp/pop-crypt": "2.1.*",
-        "popphp/pop-db": "2.1.*"
+        "popphp/pop-db": "3.0.*"
     },
     "autoload": {
         "psr-4": {
