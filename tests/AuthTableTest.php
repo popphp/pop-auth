@@ -20,7 +20,7 @@ class AuthTableTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('username', $table->getUsernameField());
         $this->assertEquals('password', $table->getPasswordField());
         $this->assertEquals(Auth::VALID, $table->authenticate());
-        $this->assertInstanceOf('Pop\Auth\Test\TestAsset\Users', $table->getUser());
+        $this->assertInstanceOf('Pop\Db\Record\Result', $table->getUser());
     }
 
 
