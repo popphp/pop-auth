@@ -11,19 +11,19 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
+namespace Pop\Auth;
 
 /**
  * File auth adapter class
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-class File extends EncryptedAdapter
+class File extends AbstractEncryptedAuth
 {
 
     /**
@@ -52,7 +52,6 @@ class File extends EncryptedAdapter
      * @param  string $filename
      * @param  int    $encryption
      * @param  array  $options
-     * @return File
      */
     public function __construct($filename, $encryption = 0, array $options = [])
     {
@@ -134,13 +133,17 @@ class File extends EncryptedAdapter
     /**
      * Method to authenticate
      *
+     * @param  string $username
+     * @param  string $password
      * @return int
      */
-    public function authenticate()
+    public function authenticate($username, $password)
     {
+        $this->username = $username;
+        $this->password = $password;
+
         $lines = file($this->filename);
 
-        $result = 0;
         foreach ($lines as $line) {
             $line = trim($line);
             $user = explode($this->delimiter, $line);
@@ -148,16 +151,16 @@ class File extends EncryptedAdapter
                 if ((null !== $this->realm) && (count($user) == 3)) {
                     $password = $user[2];
                     $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
-                    $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                    $this->result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
                 } else if (count($user) == 2) {
                     $password = $user[1];
                     $string = $this->username . $this->delimiter . $password;
-                    $result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                    $this->result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
                 }
             }
         }
 
-        return $result;
+        return $this->result;
     }
 
 }

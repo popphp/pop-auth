@@ -11,19 +11,19 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
+namespace Pop\Auth;
 
 /**
- * Auth adapter interface
+ * Auth interface
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-interface AdapterInterface
+interface AuthInterface
 {
 
     /**
@@ -41,26 +41,26 @@ interface AdapterInterface
     public function getPassword();
 
     /**
-     * Set the username
+     * Get the authentication result
      *
-     * @param  string $username
-     * @return AdapterInterface
+     * @return int
      */
-    public function setUsername($username);
+    public function getResult();
 
     /**
-     * Set the password
+     * Determine if the authentication attempt was valid
      *
-     * @param  string $password
-     * @return AdapterInterface
+     * @return boolean
      */
-    public function setPassword($password);
+    public function isValid();
 
     /**
      * Method to authenticate
      *
+     * @param  string $username
+     * @param  string $password
      * @return int
      */
-    public function authenticate();
+    public function authenticate($username, $password);
 
 }

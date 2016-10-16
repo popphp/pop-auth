@@ -11,22 +11,21 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
+namespace Pop\Auth;
 
-use Pop\Auth\Auth;
 use Pop\Crypt;
 
 /**
  * Auth abstract adapter class
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-abstract class EncryptedAdapter extends AbstractAdapter
+abstract class AbstractEncryptedAuth extends AbstractAuth
 {
 
     /**
@@ -59,7 +58,7 @@ abstract class EncryptedAdapter extends AbstractAdapter
      *
      * @param  int   $encryption
      * @param  array $options
-     * @return AbstractAdapter
+     * @return AbstractEncryptedAuth
      */
     public function setEncryption($encryption = 0, array $options = [])
     {
@@ -77,7 +76,7 @@ abstract class EncryptedAdapter extends AbstractAdapter
      * Method to set the encryption options
      *
      * @param  array $options
-     * @return AbstractAdapter
+     * @return AbstractEncryptedAuth
      */
     public function setEncryptionOptions(array $options = [])
     {
@@ -122,25 +121,25 @@ abstract class EncryptedAdapter extends AbstractAdapter
         }
 
         switch ($this->encryption) {
-            case Auth::ENCRYPT_NONE:
+            case self::ENCRYPT_NONE:
                 $pw = ($hash == $attemptedPassword);
                 break;
 
-            case Auth::ENCRYPT_MD5:
+            case self::ENCRYPT_MD5:
                 $pw = ($hash == md5($attemptedPassword));
                 break;
 
-            case Auth::ENCRYPT_SHA1:
+            case self::ENCRYPT_SHA1:
                 $pw = ($hash == sha1($attemptedPassword));
                 break;
 
-            case Auth::ENCRYPT_CRYPT:
+            case self::ENCRYPT_CRYPT:
                 $crypt = new Crypt\Crypt();
                 $crypt->setSalt($salt);
                 $pw = $crypt->verify($attemptedPassword, $hash);
                 break;
 
-            case Auth::ENCRYPT_BCRYPT:
+            case self::ENCRYPT_BCRYPT:
                 $crypt = new Crypt\Bcrypt();
                 $crypt->setSalt($salt);
 
@@ -155,7 +154,7 @@ abstract class EncryptedAdapter extends AbstractAdapter
                 $pw = $crypt->verify($attemptedPassword, $hash);
                 break;
 
-            case Auth::ENCRYPT_MCRYPT:
+            case self::ENCRYPT_MCRYPT:
                 $crypt = new Crypt\Mcrypt();
                 $crypt->setSalt($salt);
 
@@ -173,13 +172,13 @@ abstract class EncryptedAdapter extends AbstractAdapter
                 $pw = $crypt->verify($attemptedPassword, $hash);
                 break;
 
-            case Auth::ENCRYPT_CRYPT_MD5:
+            case self::ENCRYPT_CRYPT_MD5:
                 $crypt = new Crypt\Md5();
                 $crypt->setSalt($salt);
                 $pw = $crypt->verify($attemptedPassword, $hash);
                 break;
 
-            case Auth::ENCRYPT_CRYPT_SHA_256:
+            case self::ENCRYPT_CRYPT_SHA_256:
                 $crypt = new Crypt\Sha(256);
                 $crypt->setSalt($salt);
 
@@ -191,7 +190,7 @@ abstract class EncryptedAdapter extends AbstractAdapter
                 $pw = $crypt->verify($attemptedPassword, $hash);
                 break;
 
-            case Auth::ENCRYPT_CRYPT_SHA_512:
+            case self::ENCRYPT_CRYPT_SHA_512:
                 $crypt = new Crypt\Sha(512);
                 $crypt->setSalt($salt);
 

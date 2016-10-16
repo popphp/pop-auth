@@ -11,20 +11,19 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
-
+namespace Pop\Auth;
 
 /**
  * Ldap auth adapter class
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-class Ldap extends AbstractAdapter
+class Ldap extends AbstractAuth
 {
 
     /**
@@ -59,7 +58,6 @@ class Ldap extends AbstractAdapter
      * @param  string $host
      * @param  string $port
      * @param  array  $options
-     * @return Ldap
      */
     public function __construct($host, $port = null, array $options = null)
     {
@@ -188,11 +186,17 @@ class Ldap extends AbstractAdapter
     /**
      * Method to authenticate
      *
+     * @param  string $username
+     * @param  string $password
      * @return int
      */
-    public function authenticate()
+    public function authenticate($username, $password)
     {
-        return (int)(@ldap_bind($this->resource, $this->username, $this->password));
+        $this->username = $username;
+        $this->password = $password;
+        $this->result   = (int)(@ldap_bind($this->resource, $this->username, $this->password));
+
+        return $this->result;
     }
 
 }

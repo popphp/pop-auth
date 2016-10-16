@@ -11,20 +11,19 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
-
+namespace Pop\Auth;
 
 /**
  * Http auth adapter class
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-class Http extends AbstractAdapter
+class Http extends AbstractAuth
 {
 
     /**
@@ -92,10 +91,9 @@ class Http extends AbstractAdapter
      *
      * Instantiate the Http auth adapter object
      *
-     * @param string $uri
-     * @param string $method
+     * @param  string $uri
+     * @param  string $method
      * @throws Exception
-     * @return Http
      */
     public function __construct($uri, $method = 'GET')
     {
@@ -198,10 +196,15 @@ class Http extends AbstractAdapter
     /**
      * Method to authenticate
      *
+     * @param  string $username
+     * @param  string $password
      * @return int
      */
-    public function authenticate()
+    public function authenticate($username, $password)
     {
+        $this->username = $username;
+        $this->password = $password;
+
         $this->generateRequest();
 
         $context = [
@@ -228,7 +231,9 @@ class Http extends AbstractAdapter
 
         $this->sendRequest($context);
 
-        return ($this->code == 200) ? 1 : 0;
+        $this->result = ($this->code == 200) ? 1 : 0;
+
+        return $this->result;
     }
 
     /**

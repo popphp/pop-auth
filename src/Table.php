@@ -11,19 +11,19 @@
 /**
  * @namespace
  */
-namespace Pop\Auth\Adapter;
+namespace Pop\Auth;
 
 /**
  * Table auth adapter class
  *
  * @category   Pop
- * @package    Pop_Auth
+ * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.2.0
+ * @version    3.0.0
  */
-class Table extends EncryptedAdapter
+class Table extends AbstractEncryptedAuth
 {
 
     /**
@@ -58,7 +58,6 @@ class Table extends EncryptedAdapter
      * @param  string $table
      * @param  int    $encryption
      * @param  array  $options
-     * @return Table
      */
     public function __construct($table, $encryption = 0, array $options = [])
     {
@@ -145,17 +144,23 @@ class Table extends EncryptedAdapter
     /**
      * Method to authenticate
      *
+     * @param  string $username
+     * @param  string $password
      * @return int
      */
-    public function authenticate()
+    public function authenticate($username, $password)
     {
-        $table      = $this->table;
-        $this->user = $table::findBy([
+        $this->username = $username;
+        $this->password = $password;
+        $table          = $this->table;
+        $this->user     = $table::findBy([
             $this->usernameField => $this->username
         ]);
 
-        return (int)(isset($this->user->{$this->usernameField}) &&
+        $this->result = (int)(isset($this->user->{$this->usernameField}) &&
             $this->verifyPassword($this->user->{$this->passwordField}, $this->password));
+
+        return $this->result;
     }
 
 }
