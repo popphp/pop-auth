@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * File auth adapter class
+ * File auth class
  *
  * @category   Pop
  * @package    Pop\Auth
@@ -23,7 +23,7 @@ namespace Pop\Auth;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-class File extends AbstractEncryptedAuth
+class File extends AbstractAuth
 {
 
     /**
@@ -50,13 +50,19 @@ class File extends AbstractEncryptedAuth
      * Instantiate the File auth adapter object
      *
      * @param  string $filename
-     * @param  int    $encryption
-     * @param  array  $options
+     * @param  string $realm
+     * @param  string $delimiter
+     * @throws Exception
      */
-    public function __construct($filename, $encryption = 0, array $options = [])
+    public function __construct($filename, $realm = null, $delimiter = ':')
     {
-        $this->setFilename($filename);
-        $this->setEncryption($encryption, $options);
+        if (!file_exists($filename)) {
+            throw new Exception('The access file does not exist.');
+        }
+
+        $this->filename  = $filename;
+        $this->realm     = $realm;
+        $this->delimiter = $delimiter;
     }
 
     /**
@@ -90,47 +96,6 @@ class File extends AbstractEncryptedAuth
     }
 
     /**
-     * Set the auth filename
-     *
-     * @param string $filename
-     * @throws Exception
-     * @return File
-     */
-    public function setFilename($filename)
-    {
-        if (!file_exists($filename)) {
-            throw new Exception('The access file does not exist.');
-        }
-
-        $this->filename = $filename;
-        return $this;
-    }
-
-    /**
-     * Set the auth realm
-     *
-     * @param string $realm
-     * @return File
-     */
-    public function setRealm($realm)
-    {
-        $this->realm = $realm;
-        return $this;
-    }
-
-    /**
-     * Set the auth file delimiter
-     *
-     * @param string $delimiter
-     * @return File
-     */
-    public function setDelimiter($delimiter)
-    {
-        $this->delimiter = $delimiter;
-        return $this;
-    }
-
-    /**
      * Method to authenticate
      *
      * @param  string $username
@@ -139,25 +104,34 @@ class File extends AbstractEncryptedAuth
      */
     public function authenticate($username, $password)
     {
-        $this->username = $username;
-        $this->password = $password;
+        parent::authenticate($username, $password);
 
-        $lines = file($this->filename);
+        $lines        = file($this->filename);
+        $hash         = null;
+        $this->result = 0;
 
         foreach ($lines as $line) {
             $line = trim($line);
             $user = explode($this->delimiter, $line);
             if (isset($user[0]) && ($user[0] == $this->username)) {
                 if ((null !== $this->realm) && (count($user) == 3)) {
-                    $password = $user[2];
                     $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
-                    $this->result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                    if ($string == $line) {
+                        $hash = $user[2];
+                        break;
+                    }
                 } else if (count($user) == 2) {
-                    $password = $user[1];
-                    $string = $this->username . $this->delimiter . $password;
-                    $this->result = (int)(($string == $line) && $this->verifyPassword($password, $this->password));
+                    $string   = $this->username . $this->delimiter . $password;
+                    if ($string == $line) {
+                        $hash = $user[1];
+                        break;
+                    }
                 }
             }
+        }
+
+        if ((null !== $this->password) && (null !== $hash)) {
+            $this->result = (int)$this->verify($this->password, $hash);
         }
 
         return $this->result;

@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * Ldap auth adapter class
+ * Ldap auth class
  *
  * @category   Pop
  * @package    Pop\Auth
@@ -50,6 +50,7 @@ class Ldap extends AbstractAuth
      */
     protected $resource = null;
 
+
     /**
      * Constructor
      *
@@ -61,9 +62,9 @@ class Ldap extends AbstractAuth
      */
     public function __construct($host, $port = null, array $options = null)
     {
-        $this->setHost($host);
+        $this->host = $host;
         if (null !== $port) {
-            $this->setPort($port);
+            $this->port = $port;
         }
 
         if ($host != '') {
@@ -74,30 +75,6 @@ class Ldap extends AbstractAuth
         if (null !== $options) {
             $this->setOptions($options);
         }
-    }
-
-    /**
-     * Set the host
-     *
-     * @param  string $host
-     * @return Ldap
-     */
-    public function setHost($host)
-    {
-        $this->host = $host;
-        return $this;
-    }
-
-    /**
-     * Set the port
-     *
-     * @param  string $port
-     * @return Ldap
-     */
-    public function setPort($port)
-    {
-        $this->port = $port;
-        return $this;
     }
 
     /**
@@ -131,6 +108,7 @@ class Ldap extends AbstractAuth
 
         return $this;
     }
+
 
     /**
      * Get the host
@@ -192,10 +170,8 @@ class Ldap extends AbstractAuth
      */
     public function authenticate($username, $password)
     {
-        $this->username = $username;
-        $this->password = $password;
-        $this->result   = (int)(@ldap_bind($this->resource, $this->username, $this->password));
-
+        parent::authenticate($username, $password);
+        $this->result = (int)(@ldap_bind($this->resource, $this->username, $this->password));
         return $this->result;
     }
 

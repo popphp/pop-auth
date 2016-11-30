@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * Table auth adapter class
+ * Table auth class
  *
  * @category   Pop
  * @package    Pop\Auth
@@ -23,7 +23,7 @@ namespace Pop\Auth;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-class Table extends AbstractEncryptedAuth
+class Table extends AbstractAuth
 {
 
     /**
@@ -45,24 +45,26 @@ class Table extends AbstractEncryptedAuth
     protected $passwordField = 'password';
 
     /**
-     * DB table name / class name
-     * @var \Pop\Db\Record
+     * User record
+     * @var mixed
      */
     protected $user = null;
 
     /**
      * Constructor
      *
-     * Instantiate the Table auth adapter object
+     * Instantiate the File auth adapter object
      *
      * @param  string $table
-     * @param  int    $encryption
-     * @param  array  $options
+     * @param  string $usernameField
+     * @param  string $passwordField
+     * @throws Exception
      */
-    public function __construct($table, $encryption = 0, array $options = [])
+    public function __construct($table, $usernameField = 'username', $passwordField = 'password')
     {
-        $this->setTable($table);
-        $this->setEncryption($encryption, $options);
+        $this->table         = $table;
+        $this->usernameField = $usernameField;
+        $this->passwordField = $passwordField;
     }
 
     /**
@@ -96,49 +98,13 @@ class Table extends AbstractEncryptedAuth
     }
 
     /**
-     * Get the user object
+     * Get the user record
      *
-     * @return \Pop\Db\Record
+     * @return mixed
      */
     public function getUser()
     {
         return $this->user;
-    }
-
-    /**
-     * Set the table name
-     *
-     * @param string $table
-     * @return Table
-     */
-    public function setTable($table)
-    {
-        $this->table = $table;
-        return $this;
-    }
-
-    /**
-     * Set the username field
-     *
-     * @param string $usernameField
-     * @return Table
-     */
-    public function setUsernameField($usernameField = 'username')
-    {
-        $this->usernameField = $usernameField;
-        return $this;
-    }
-
-    /**
-     * Set the password field
-     *
-     * @param string $passwordField
-     * @return Table
-     */
-    public function setPasswordField($passwordField = 'password')
-    {
-        $this->passwordField = $passwordField;
-        return $this;
     }
 
     /**
@@ -150,15 +116,17 @@ class Table extends AbstractEncryptedAuth
      */
     public function authenticate($username, $password)
     {
-        $this->username = $username;
-        $this->password = $password;
-        $table          = $this->table;
-        $this->user     = $table::findBy([
+        parent::authenticate($username, $password);
+
+        $table        = $this->table;
+        $this->result = 0;
+        $this->user   = $table::findBy([
             $this->usernameField => $this->username
         ]);
 
-        $this->result = (int)(isset($this->user->{$this->usernameField}) &&
-            $this->verifyPassword($this->user->{$this->passwordField}, $this->password));
+        if ((null !== $this->password) && isset($this->user->{$this->passwordField}) && (null !== $this->user->{$this->passwordField})) {
+            $this->result = (int)$this->verify($this->password, $this->user->{$this->passwordField});
+        }
 
         return $this->result;
     }

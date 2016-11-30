@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * Auth abstract  class
+ * Abstract auth class
  *
  * @category   Pop
  * @package    Pop\Auth
@@ -23,33 +23,14 @@ namespace Pop\Auth;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-abstract class AbstractAuth implements AuthInterface
+abstract class AbstractAuth
 {
 
     /**
-     * Encryption constants
-     * @var int
-     */
-    const ENCRYPT_NONE          = 0;
-    const ENCRYPT_MD5           = 1;
-    const ENCRYPT_SHA1          = 2;
-    const ENCRYPT_CRYPT         = 3;
-    const ENCRYPT_BCRYPT        = 4;
-    const ENCRYPT_MCRYPT        = 5;
-    const ENCRYPT_CRYPT_MD5     = 6;
-    const ENCRYPT_CRYPT_SHA_256 = 7;
-    const ENCRYPT_CRYPT_SHA_512 = 8;
-
-    /**
-     * Constant for credentials not being valid
+     * Constant for auth result
      * @var int
      */
     const NOT_VALID = 0;
-
-    /**
-     * Constant for credentials being valid
-     * @var int
-     */
     const VALID = 1;
 
     /**
@@ -59,36 +40,16 @@ abstract class AbstractAuth implements AuthInterface
     protected $result = 0;
 
     /**
-     * Username to authenticate against
+     * Authentication username
      * @var string
      */
     protected $username = null;
 
     /**
-     * Password to authenticate against
+     * Authentication password
      * @var string
      */
     protected $password = null;
-
-    /**
-     * Get the username
-     *
-     * @return string
-     */
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    /**
-     * Get the password
-     *
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
 
     /**
      * Get the authentication result
@@ -111,12 +72,74 @@ abstract class AbstractAuth implements AuthInterface
     }
 
     /**
-     * Method to authenticate
+     * Get the username
+     *
+     * @return string
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
+     * Get the password
+     *
+     * @return string
+     */
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * Set the username
      *
      * @param  string $username
-     * @param  string $password
-     * @return int
+     * @return AbstractAuth
      */
-    abstract public function authenticate($username, $password);
+    public function setUsername($username)
+    {
+        $this->username = $username;
+        return $this;
+    }
+
+    /**
+     * Set the password
+     *
+     * @param  string $password
+     * @return AbstractAuth
+     */
+    public function setPassword($password)
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    /**
+     * Method to authenticate
+     *
+     * @param string $username
+     * @param string $password
+     */
+    public function authenticate($username, $password)
+    {
+        $this->setUsername($username);
+        $this->setPassword($password);
+    }
+
+    /**
+     * Method to verify a password against a hash
+     *
+     * @param string $password
+     * @param string $hash
+     * @return boolean;
+     */
+    protected function verify($password, $hash)
+    {
+        $info = password_get_info($hash);
+
+        return ((($info['algo'] == 0) && ($info['algoName'] == 'unknown')) ?
+            ($password === $hash) : password_verify($password, $hash));
+    }
 
 }

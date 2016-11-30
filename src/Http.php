@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * Http auth adapter class
+ * Http auth class
  *
  * @category   Pop
  * @package    Pop\Auth
@@ -91,14 +91,14 @@ class Http extends AbstractAuth
      *
      * Instantiate the Http auth adapter object
      *
-     * @param  string $uri
-     * @param  string $method
+     * @param string $uri
+     * @param string $method
      * @throws Exception
      */
     public function __construct($uri, $method = 'GET')
     {
-        if (stripos($uri, 'http') === false) {
-            throw new Exception('Error: The URI parameter must be a fully URI with the HTTP scheme.');
+        if (substr($uri, 0, 4) != 'http') {
+            throw new Exception('Error: The URI parameter must be a full URI with the HTTP scheme.');
         }
 
         $this->uri         = $uri;
@@ -202,8 +202,7 @@ class Http extends AbstractAuth
      */
     public function authenticate($username, $password)
     {
-        $this->username = $username;
-        $this->password = $password;
+        parent::authenticate($username, $password);
 
         $this->generateRequest();
 
@@ -230,9 +229,7 @@ class Http extends AbstractAuth
         }
 
         $this->sendRequest($context);
-
-        $this->result = ($this->code == 200) ? 1 : 0;
-
+        $this->result = (int)($this->code == 200);
         return $this->result;
     }
 
@@ -290,11 +287,9 @@ class Http extends AbstractAuth
     {
         $http_response_header = null;
 
-        if (null !== $context) {
-            $stream = @fopen($this->uri, 'r', false, stream_context_create($context));
-        } else {
-            $stream = @fopen($this->uri, 'r');
-        }
+        $stream = (null !== $context) ?
+            @fopen($this->uri, 'r', false, stream_context_create($context)) :
+            @fopen($this->uri, 'r');
 
         if ($stream != false) {
             $meta = stream_get_meta_data($stream);

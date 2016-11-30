@@ -14,7 +14,7 @@
 namespace Pop\Auth;
 
 /**
- * Auth exception class
+ * Auth adapter exception class
  *
  * @category   Pop
  * @package    Pop\Auth
