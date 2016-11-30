@@ -1,1 +1,2 @@
 admin:12admin34
+admin_bcrypt:$2y$08$M1lYRVN2ZjVkbmptbVdzMeIbMUQycSTsgYv8ni3ERJeHGZTspScGO

@@ -2,17 +2,16 @@
 
 namespace Pop\Auth\Test;
 
-use Pop\Auth\Auth;
-use Pop\Auth\Adapter;
+use Pop\Auth\Http;
 
 class AuthHttpTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testConstructor()
     {
-        $http = new Adapter\Http('http://www.google.com/', 'GET');
-        $this->assertInstanceOf('Pop\Auth\Adapter\Http', $http);
-        $this->assertEquals(Auth::VALID, $http->authenticate());
+        $http = new Http('http://www.google.com/', 'GET');
+        $this->assertInstanceOf('Pop\Auth\Http', $http);
+        $this->assertEquals(Http::VALID, $http->authenticate('username', 'password'));
         $this->assertNull($http->getType());
         $this->assertEquals(0, count($http->getScheme()));
         $this->assertEquals('1.0', $http->getVersion());
@@ -25,8 +24,8 @@ class AuthHttpTest extends \PHPUnit_Framework_TestCase
 
     public function testConstructorBadUri()
     {
-        $this->setExpectedException('Pop\Auth\Adapter\Exception');
-        $http = new Adapter\Http('localhost');
+        $this->expectException('Pop\Auth\Exception');
+        $http = new Http('localhost');
     }
 
 }
