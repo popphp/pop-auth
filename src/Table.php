@@ -27,7 +27,7 @@ class Table extends AbstractAuth
 {
 
     /**
-     * DB table name / class name
+     * DB table name/class name
      * @var string
      */
     protected $table = null;

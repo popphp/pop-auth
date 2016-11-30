@@ -50,7 +50,6 @@ class Ldap extends AbstractAuth
      */
     protected $resource = null;
 
-
     /**
      * Constructor
      *
@@ -108,7 +107,6 @@ class Ldap extends AbstractAuth
 
         return $this;
     }
-
 
     /**
      * Get the host
