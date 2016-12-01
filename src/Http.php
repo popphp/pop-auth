@@ -238,7 +238,7 @@ class Http extends AbstractAuth
      *
      * @return void
      */
-    protected function generateRequest()
+    public function generateRequest()
     {
         $this->sendRequest();
 
@@ -260,7 +260,7 @@ class Http extends AbstractAuth
      * @param  string $wwwAuth
      * @return void
      */
-    protected function parseScheme($wwwAuth)
+    public function parseScheme($wwwAuth)
     {
         $this->type = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
         $scheme     = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
@@ -335,7 +335,7 @@ class Http extends AbstractAuth
      * @throws Exception
      * @return string
      */
-    protected static function decodeBody($body, $decode = 'gzip')
+    public static function decodeBody($body, $decode = 'gzip')
     {
         switch ($decode) {
             // GZIP compression
@@ -370,7 +370,7 @@ class Http extends AbstractAuth
      * @param string $body
      * @return string
      */
-    protected static function decodeChunkedBody($body)
+    public static function decodeChunkedBody($body)
     {
         $decoded = '';
 

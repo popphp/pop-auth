@@ -28,4 +28,26 @@ class AuthHttpTest extends \PHPUnit_Framework_TestCase
         $http = new Http('localhost');
     }
 
+    public function testDecodeBody()
+    {
+        $encodedBody = gzencode('Test body');
+        $body = Http::decodeBody($encodedBody);
+        $this->assertEquals('Test body', $body);
+
+        $encodedBody = gzdeflate('Test body');
+        $body = Http::decodeBody($encodedBody, 'deflate');
+        $this->assertEquals('Test body', $body);
+
+        $encodedBody = 'Test body';
+        $body = Http::decodeBody($encodedBody, 'unknown');
+        $this->assertEquals('Test body', $body);
+    }
+
+    public function testParseScheme()
+    {
+        $http   = new Http('http://www.google.com/', 'GET');
+        $http->parseScheme('Basic realm="myRealm"');
+        $this->assertEquals('myRealm', $http->getScheme()['realm']);
+    }
+
 }

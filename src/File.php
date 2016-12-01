@@ -115,14 +115,12 @@ class File extends AbstractAuth
             $user = explode($this->delimiter, $line);
             if (isset($user[0]) && ($user[0] == $this->username)) {
                 if ((null !== $this->realm) && (count($user) == 3)) {
-                    $string = $this->username . $this->delimiter . $this->realm . $this->delimiter . $password;
-                    if ($string == $line) {
+                    if (($this->username == $user[0]) && ($user[1] == $this->realm)) {
                         $hash = $user[2];
                         break;
                     }
                 } else if (count($user) == 2) {
-                    $string   = $this->username . $this->delimiter . $password;
-                    if ($string == $line) {
+                    if ($this->username == $user[0]) {
                         $hash = $user[1];
                         break;
                     }
