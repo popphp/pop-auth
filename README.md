@@ -1,6 +1,9 @@
 pop-auth
 ========
 
+[![Build Status](https://travis-ci.org/popphp/pop-auth.svg?branch=master)](https://travis-ci.org/popphp/pop-auth)
+[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-auth)](http://cc.popphp.org/pop-auth/)
+
 OVERVIEW
 --------
 `pop-auth` provides integrated adapters to authenticate users with a file, a database,

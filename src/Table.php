@@ -120,7 +120,7 @@ class Table extends AbstractAuth
 
         $table        = $this->table;
         $this->result = 0;
-        $this->user   = $table::findBy([
+        $this->user   = $table::findOne([
             $this->usernameField => $this->username
         ]);
 
