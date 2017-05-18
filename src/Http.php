@@ -27,10 +27,37 @@ class Http extends AbstractAuth
 {
 
     /**
+     * HTTP auth constants
+     */
+    const AUTH_BASIC   = 'Basic';
+    const AUTH_DIGEST  = 'Digest';
+    const AUTH_BEARER  = 'Bearer';
+    const AUTH_REFRESH = 'Refresh';
+    const AUTH_DATA    = 'Data';
+
+    /**
      * Auth URI
      * @var string
      */
     protected $uri = null;
+
+    /**
+     * Auth bearer token
+     * @var string
+     */
+    protected $bearerToken = null;
+
+    /**
+     * Auth refresh token
+     * @var string
+     */
+    protected $refreshToken = null;
+
+    /**
+     * Auth refresh token name
+     * @var string
+     */
+    protected $refreshTokenName = 'refresh';
 
     /**
      * Auth relative URI
@@ -93,9 +120,10 @@ class Http extends AbstractAuth
      *
      * @param string $uri
      * @param string $method
+     * @param string $type
      * @throws Exception
      */
-    public function __construct($uri, $method = 'GET')
+    public function __construct($uri, $method = 'POST', $type = null)
     {
         if (substr($uri, 0, 4) != 'http') {
             throw new Exception('Error: The URI parameter must be a full URI with the HTTP scheme.');
@@ -110,6 +138,76 @@ class Http extends AbstractAuth
         if (($method == 'GET') || ($method == 'POST') || ($method == 'PUT') || ($method == 'PATCH')) {
             $this->method = $method;
         }
+
+        if (null !== $type) {
+            $this->type = $type;
+        }
+    }
+
+    /**
+     * Set the bearer token
+     *
+     * @param  string $bearerToken
+     * @return Http
+     */
+    public function setBearerToken($bearerToken)
+    {
+        $this->bearerToken = $bearerToken;
+        return $this;
+    }
+
+    /**
+     * Set the refresh token
+     *
+     * @param  string $refreshToken
+     * @return Http
+     */
+    public function setRefreshToken($refreshToken)
+    {
+        $this->refreshToken = $refreshToken;
+        return $this;
+    }
+
+    /**
+     * Set the refresh token name
+     *
+     * @param  string $refreshTokenName
+     * @return Http
+     */
+    public function setRefreshTokenName($refreshTokenName)
+    {
+        $this->refreshTokenName = $refreshTokenName;
+        return $this;
+    }
+
+    /**
+     * Get the bearer token
+     *
+     * @return string
+     */
+    public function getBearerToken()
+    {
+        return $this->bearerToken;
+    }
+
+    /**
+     * Get the refresh token
+     *
+     * @return string
+     */
+    public function getRefreshToken()
+    {
+        return $this->refreshToken;
+    }
+
+    /**
+     * Get the refresh token name
+     *
+     * @return string
+     */
+    public function getRefreshTokenName()
+    {
+        return $this->refreshTokenName;
     }
 
     /**
@@ -198,14 +296,28 @@ class Http extends AbstractAuth
      *
      * @param  string $username
      * @param  string $password
+     * @param  array  $headers
      * @return int
      */
-    public function authenticate($username, $password)
+    public function authenticate($username, $password, array $headers = null)
     {
         parent::authenticate($username, $password);
 
-        $this->generateRequest();
+        if (null === $this->type) {
+            $this->generateRequest();
+        }
 
+        return $this->validate($headers);
+    }
+
+    /**
+     * Method to validate authentication
+     *
+     * @param  array $headers
+     * @return int
+     */
+    public function validate(array $headers = null)
+    {
         $context = [
             'http' => [
                 'method' => $this->method,
@@ -213,18 +325,51 @@ class Http extends AbstractAuth
             ]
         ];
 
-        switch ($this->type) {
-            case 'Basic':
-                $context['http']['header'] = 'Authorization: Basic ' . base64_encode($this->username . ':' . $this->password);
-                break;
+        if (null !== $headers) {
+            foreach ($headers as $header => $value) {
+                $context['http']['header'] .= $header . ": " . $value . "\r\n";
+            }
+        }
 
-            case 'Digest':
+        switch ($this->type) {
+            case self::AUTH_DIGEST:
                 $a1 = md5($this->username . ':' . $this->scheme['realm'] . ':' . $this->password);
                 $a2 = md5($this->method . ':' . $this->relativeUri);
                 $r  = md5($a1 . ':' . $this->scheme['nonce'] . ':' . $a2);
-                $context['http']['header'] = 'Authorization: Digest username="' . $this->username .
+                $context['http']['header'] .= 'Authorization: Digest username="' . $this->username .
                     '", realm="' . $this->scheme['realm'] . '", nonce="' . $this->scheme['nonce'] .
                     '", uri="' . $this->relativeUri . '", response="' . $r . '"';
+                break;
+
+            case self::AUTH_BASIC:
+                $context['http']['header'] .= 'Authorization: Basic ' . base64_encode($this->username . ':' . $this->password);
+                break;
+
+            case self::AUTH_BEARER:
+                $context['http']['header'] .= 'Authorization: Bearer ' . $this->bearerToken;
+                break;
+
+            case self::AUTH_REFRESH:
+                $context['http']['header'] .= 'Authorization: Bearer ' . $this->bearerToken . "\r\n";
+                if (isset($headers['Content-Type']) && (strpos($headers['Content-Type'], 'json') !== false)) {
+                    $data = json_encode([$this->refreshTokenName => $this->refreshToken]);
+                    $context['http']['header'] .= "Content-Length: " . strlen($data) . "\r\n";
+                    $context['http']['content'] = $data;
+                } else {
+                    $data = http_build_query([$this->refreshTokenName => $this->refreshToken]);
+                    $context['http']['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n"
+                        . "Content-Length: " . strlen($data) . "\r\n";
+                    $context['http']['content'] = $data;
+                }
+
+                break;
+
+            // GET is not allowed for security reasons
+            case self::AUTH_DATA:
+                $data = http_build_query(['username' => $this->username, 'password' => $this->password]);
+                $context['http']['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n"
+                    . "Content-Length: " . strlen($data) . "\r\n";
+                $context['http']['content'] = $data;
                 break;
         }
 
@@ -240,7 +385,12 @@ class Http extends AbstractAuth
      */
     public function generateRequest()
     {
-        $this->sendRequest();
+        $context = [
+            'http' => [
+                'method' => $this->method
+            ]
+        ];
+        $this->sendRequest($context);
 
         // Check for the WWW Auth header and parse it
         if (isset($this->headers['WWW-Authenticate'])) {
@@ -262,18 +412,22 @@ class Http extends AbstractAuth
      */
     public function parseScheme($wwwAuth)
     {
-        $this->type = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
-        $scheme     = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
+        if (strpos($wwwAuth, ' ') !== false) {
+            $this->type = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
+            $scheme     = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
 
-        foreach ($scheme as $sch) {
-            $sch   = trim($sch);
-            $name  = substr($sch,0, strpos($sch, '='));
-            $value = substr($sch, (strpos($sch, '=') + 1));
-            if ((substr($value, 0, 1) == '"') && (substr($value, -1) == '"')) {
-                $value = substr($value, 1);
-                $value = substr($value, 0, -1);
+            foreach ($scheme as $sch) {
+                $sch   = trim($sch);
+                $name  = substr($sch,0, strpos($sch, '='));
+                $value = substr($sch, (strpos($sch, '=') + 1));
+                if ((substr($value, 0, 1) == '"') && (substr($value, -1) == '"')) {
+                    $value = substr($value, 1);
+                    $value = substr($value, 0, -1);
+                }
+                $this->scheme[$name] = $value;
             }
-            $this->scheme[$name] = $value;
+        } else {
+            $this->type = $wwwAuth;
         }
     }
 

@@ -10,7 +10,13 @@ class AuthHttpTest extends \PHPUnit_Framework_TestCase
     public function testConstructor()
     {
         $http = new Http('http://www.google.com/', 'GET');
+        $http->setBearerToken('123456');
+        $http->setRefreshToken('654321');
+        $http->setRefreshTokenName('refresh_token');
         $this->assertInstanceOf('Pop\Auth\Http', $http);
+        $this->assertEquals('123456', $http->getBearerToken());
+        $this->assertEquals('654321', $http->getRefreshToken());
+        $this->assertEquals('refresh_token', $http->getRefreshTokenName());
         $this->assertEquals(Http::VALID, $http->authenticate('username', 'password'));
         $this->assertNull($http->getType());
         $this->assertEquals(0, count($http->getScheme()));
