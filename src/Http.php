@@ -474,7 +474,7 @@ class Http extends AbstractAuth
 
         // If the body content is encoded, decode the body content
         if (array_key_exists('Content-Encoding', $this->headers)) {
-            if (isset($headers['Transfer-Encoding']) && ($this->headers['Transfer-Encoding'] == 'chunked')) {
+            if (isset($this->headers['Transfer-Encoding']) && ($this->headers['Transfer-Encoding'] == 'chunked')) {
                 $this->body = self::decodeChunkedBody($this->body);
             }
             $this->body = self::decodeBody($this->body, $this->headers['Content-Encoding']);
