@@ -440,6 +440,7 @@ class Http extends AbstractAuth
     protected function sendRequest(array $context = null)
     {
         $http_response_header = null;
+        $firstLine            = null;
 
         $stream = (null !== $context) ?
             @fopen($this->uri, 'r', false, stream_context_create($context)) :
@@ -451,33 +452,35 @@ class Http extends AbstractAuth
             unset($meta['wrapper_data'][0]);
             $allHeadersAry = $meta['wrapper_data'];
             $this->body = stream_get_contents($stream);
-        } else {
+        } else if (null !== $http_response_header) {
             $firstLine = $http_response_header[0];
             unset($http_response_header[0]);
             $allHeadersAry = $http_response_header;
             $this->body = null;
         }
 
-        // Get the version, code and message
-        $this->version = substr($firstLine, 0, strpos($firstLine, ' '));
-        $this->version = substr($this->version, (strpos($this->version, '/') + 1));
-        preg_match('/\d\d\d/', trim($firstLine), $match);
-        $this->code    = $match[0];
-        $this->message = str_replace('HTTP/' . $this->version . ' ' . $this->code . ' ', '', $firstLine);
+        if (null !== $firstLine) {
+            // Get the version, code and message
+            $this->version = substr($firstLine, 0, strpos($firstLine, ' '));
+            $this->version = substr($this->version, (strpos($this->version, '/') + 1));
+            preg_match('/\d\d\d/', trim($firstLine), $match);
+            $this->code    = $match[0];
+            $this->message = str_replace('HTTP/' . $this->version . ' ' . $this->code . ' ', '', $firstLine);
 
-        // Get the headers
-        foreach ($allHeadersAry as $hdr) {
-            $name = substr($hdr, 0, strpos($hdr, ':'));
-            $value = substr($hdr, (strpos($hdr, ' ') + 1));
-            $this->headers[trim($name)] = trim($value);
-        }
-
-        // If the body content is encoded, decode the body content
-        if (array_key_exists('Content-Encoding', $this->headers)) {
-            if (isset($this->headers['Transfer-Encoding']) && ($this->headers['Transfer-Encoding'] == 'chunked')) {
-                $this->body = self::decodeChunkedBody($this->body);
+            // Get the headers
+            foreach ($allHeadersAry as $hdr) {
+                $name = substr($hdr, 0, strpos($hdr, ':'));
+                $value = substr($hdr, (strpos($hdr, ' ') + 1));
+                $this->headers[trim($name)] = trim($value);
             }
-            $this->body = self::decodeBody($this->body, $this->headers['Content-Encoding']);
+
+            // If the body content is encoded, decode the body content
+            if (array_key_exists('Content-Encoding', $this->headers)) {
+                if (isset($this->headers['Transfer-Encoding']) && ($this->headers['Transfer-Encoding'] == 'chunked')) {
+                    $this->body = self::decodeChunkedBody($this->body);
+                }
+                $this->body = self::decodeBody($this->body, $this->headers['Content-Encoding']);
+            }
         }
     }
 
