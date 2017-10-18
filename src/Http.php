@@ -297,9 +297,11 @@ class Http extends AbstractAuth
      * @param  string $username
      * @param  string $password
      * @param  array  $headers
+     * @param  array  $contextOptions
+     * @param  array  $contextParams
      * @return int
      */
-    public function authenticate($username, $password, array $headers = null)
+    public function authenticate($username, $password, array $headers = null, array $contextOptions = [], array $contextParams = null)
     {
         parent::authenticate($username, $password);
 
@@ -307,16 +309,18 @@ class Http extends AbstractAuth
             $this->generateRequest();
         }
 
-        return $this->validate($headers);
+        return $this->validate($headers, $contextOptions, $contextParams);
     }
 
     /**
      * Method to validate authentication
      *
      * @param  array $headers
+     * @param  array $contextOptions
+     * @param  array $contextParams
      * @return int
      */
-    public function validate(array $headers = null)
+    public function validate(array $headers = null, array $contextOptions = [], array $contextParams = null)
     {
         $context = [
             'http' => [
@@ -324,6 +328,8 @@ class Http extends AbstractAuth
                 'header' => null
             ]
         ];
+
+        $context = array_merge($context, $contextOptions);
 
         if (null !== $headers) {
             foreach ($headers as $header => $value) {
@@ -373,7 +379,7 @@ class Http extends AbstractAuth
                 break;
         }
 
-        $this->sendRequest($context);
+        $this->sendRequest($context, $contextParams);
         $this->result = (int)($this->code == 200);
         return $this->result;
     }
@@ -435,16 +441,21 @@ class Http extends AbstractAuth
      * Send the request
      *
      * @param  array $context
+     * @param  array $contextParams
      * @return void
      */
-    protected function sendRequest(array $context = null)
+    protected function sendRequest(array $context = null, array $contextParams = null)
     {
         $http_response_header = null;
         $firstLine            = null;
 
-        $stream = (null !== $context) ?
-            @fopen($this->uri, 'r', false, stream_context_create($context)) :
-            @fopen($this->uri, 'r');
+        if (null !== $context) {
+            $stream = (null !== $contextParams) ?
+                @fopen($this->uri, 'r', false, stream_context_create($context, $contextParams)) :
+                @fopen($this->uri, 'r', false, stream_context_create($context));
+        } else {
+            $stream = @fopen($this->uri, 'r');
+        }
 
         if ($stream != false) {
             $meta = stream_get_meta_data($stream);
