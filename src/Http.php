@@ -329,7 +329,7 @@ class Http extends AbstractAuth
             ]
         ];
 
-        $context = array_merge($context, $contextOptions);
+        $context = array_merge_recursive($context, $contextOptions);
 
         if (null !== $headers) {
             foreach ($headers as $header => $value) {
