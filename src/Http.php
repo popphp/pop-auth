@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,7 +19,7 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
@@ -121,15 +121,11 @@ class Http extends AbstractAuth
      * @param string $uri
      * @param string $method
      * @param string $type
-     * @throws Exception
      */
     public function __construct($uri, $method = 'POST', $type = null)
     {
-        if (substr($uri, 0, 4) != 'http') {
-            throw new Exception('Error: The URI parameter must be a full URI with the HTTP scheme.');
-        }
+        $this->setUri($uri);
 
-        $this->uri         = $uri;
         $this->relativeUri = substr($uri, (strpos($uri, '://') + 3));
         $this->relativeUri = substr($this->relativeUri, strpos($this->relativeUri, '/'));
 
@@ -142,6 +138,35 @@ class Http extends AbstractAuth
         if (null !== $type) {
             $this->type = $type;
         }
+    }
+
+    /**
+     * Set the URI
+     *
+     * @param  string $uri
+     * @throws Exception
+     * @return Http
+     */
+    public function setUri($uri)
+    {
+        if (substr($uri, 0, 4) != 'http') {
+            throw new Exception('Error: The URI parameter must be a full URI with the HTTP scheme.');
+        }
+
+        $this->uri = $uri;
+        return $this;
+    }
+
+    /**
+     * Set the relative URI
+     *
+     * @param  string $relativeUri
+     * @return Http
+     */
+    public function setRelativeUri($relativeUri)
+    {
+        $this->relativeUri = $relativeUri;
+        return $this;
     }
 
     /**
@@ -178,6 +203,26 @@ class Http extends AbstractAuth
     {
         $this->refreshTokenName = $refreshTokenName;
         return $this;
+    }
+
+    /**
+     * Get the URI
+     *
+     * @return string
+     */
+    public function getUri()
+    {
+        return $this->uri;
+    }
+
+    /**
+     * Get the relative URI
+     *
+     * @return string
+     */
+    public function getRelativeUri()
+    {
+        return $this->relativeUri;
     }
 
     /**
@@ -303,7 +348,8 @@ class Http extends AbstractAuth
      */
     public function authenticate($username, $password, array $headers = null, array $contextOptions = [], array $contextParams = null)
     {
-        parent::authenticate($username, $password);
+        $this->setUsername($username);
+        $this->setPassword($password);
 
         if (null === $this->type) {
             $this->generateRequest();

@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.0.5
+ * @version    3.1.0
  */
 class Table extends AbstractAuth
 {
@@ -58,7 +58,6 @@ class Table extends AbstractAuth
      * @param  string $table
      * @param  string $usernameField
      * @param  string $passwordField
-     * @throws Exception
      */
     public function __construct($table, $usernameField = 'username', $passwordField = 'password')
     {
@@ -98,6 +97,42 @@ class Table extends AbstractAuth
     }
 
     /**
+     * Set the table name
+     *
+     * @param  string $table
+     * @return Table
+     */
+    public function setTable($table)
+    {
+        $this->table = $table;
+        return $this;
+    }
+
+    /**
+     * Set the username field
+     *
+     * @param  string $usernameField
+     * @return Table
+     */
+    public function setUsernameField($usernameField)
+    {
+        $this->usernameField = $usernameField;
+        return $this;
+    }
+
+    /**
+     * Set the password field
+     *
+     * @param  string $passwordField
+     * @return Table
+     */
+    public function setPasswordField($passwordField)
+    {
+        $this->passwordField = $passwordField;
+        return $this;
+    }
+
+    /**
      * Get the user record
      *
      * @return mixed
@@ -116,7 +151,8 @@ class Table extends AbstractAuth
      */
     public function authenticate($username, $password)
     {
-        parent::authenticate($username, $password);
+        $this->setUsername($username);
+        $this->setPassword($password);
 
         $table        = $this->table;
         $this->result = 0;
@@ -124,7 +160,8 @@ class Table extends AbstractAuth
             $this->usernameField => $this->username
         ]);
 
-        if ((null !== $this->password) && isset($this->user->{$this->passwordField}) && (null !== $this->user->{$this->passwordField})) {
+        if ((null !== $this->password) && isset($this->user->{$this->passwordField}) &&
+            (null !== $this->user->{$this->passwordField})) {
             $this->result = (int)$this->verify($this->password, $this->user->{$this->passwordField});
         }
 

@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.0.5
+ * @version    3.1.0
  */
 class Ldap extends AbstractAuth
 {
@@ -62,9 +62,7 @@ class Ldap extends AbstractAuth
     public function __construct($host, $port = null, array $options = null)
     {
         $this->host = $host;
-        if (null !== $port) {
-            $this->port = $port;
-        }
+        $this->port = $port;
 
         if ($host != '') {
             $host = (null !== $this->port) ? $this->host . ':' . $this->port : $this->host;
@@ -74,6 +72,30 @@ class Ldap extends AbstractAuth
         if (null !== $options) {
             $this->setOptions($options);
         }
+    }
+
+    /**
+     * Set the host
+     *
+     * @param  string $host
+     * @return string
+     */
+    public function setHost($host)
+    {
+        $this->host = $host;
+        return $this;
+    }
+
+    /**
+     * Set the port
+     *
+     * @param  string $port
+     * @return Ldap
+     */
+    public function setPort($port)
+    {
+        $this->port = $port;
+        return $this;
     }
 
     /**
@@ -154,6 +176,16 @@ class Ldap extends AbstractAuth
      *
      * @return resource
      */
+    public function getResource()
+    {
+        return $this->resource;
+    }
+
+    /**
+     * Get the Ldap resource (alias)
+     *
+     * @return resource
+     */
     public function resource()
     {
         return $this->resource;
@@ -168,8 +200,11 @@ class Ldap extends AbstractAuth
      */
     public function authenticate($username, $password)
     {
-        parent::authenticate($username, $password);
+        $this->setUsername($username);
+        $this->setPassword($password);
+
         $this->result = (int)(@ldap_bind($this->resource, $this->username, $this->password));
+
         return $this->result;
     }
 

@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.0.5
+ * @version    3.1.0
  */
 abstract class AbstractAuth
 {
@@ -31,7 +31,7 @@ abstract class AbstractAuth
      * @var int
      */
     const NOT_VALID = 0;
-    const VALID = 1;
+    const VALID     = 1;
 
     /**
      * Authentication result
@@ -118,14 +118,11 @@ abstract class AbstractAuth
     /**
      * Method to authenticate
      *
-     * @param string $username
-     * @param string $password
+     * @param  string $username
+     * @param  string $password
+     * @return int
      */
-    public function authenticate($username, $password)
-    {
-        $this->setUsername($username);
-        $this->setPassword($password);
-    }
+    abstract public function authenticate($username, $password);
 
     /**
      * Method to verify a password against a hash

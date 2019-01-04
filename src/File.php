@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2018 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.0.5
+ * @version    3.1.0
  */
 class File extends AbstractAuth
 {
@@ -56,11 +56,7 @@ class File extends AbstractAuth
      */
     public function __construct($filename, $realm = null, $delimiter = ':')
     {
-        if (!file_exists($filename)) {
-            throw new Exception('The access file does not exist.');
-        }
-
-        $this->filename  = $filename;
+        $this->setFilename($filename);
         $this->realm     = $realm;
         $this->delimiter = $delimiter;
     }
@@ -96,6 +92,46 @@ class File extends AbstractAuth
     }
 
     /**
+     * Set the auth filename
+     *
+     * @param  string $filename
+     * @throws Exception
+     * @return File
+     */
+    public function setFilename($filename)
+    {
+        if (!file_exists($filename)) {
+            throw new Exception('The access file does not exist.');
+        }
+        $this->filename = $filename;
+        return $this;
+    }
+
+    /**
+     * Set the auth realm
+     *
+     * @param  string $realm
+     * @return File
+     */
+    public function setRealm($realm)
+    {
+        $this->realm = $realm;
+        return $this;
+    }
+
+    /**
+     * Set the auth file delimiter
+     *
+     * @param  string $delimiter
+     * @return File
+     */
+    public function setDelimiter($delimiter)
+    {
+        $this->delimiter = $delimiter;
+        return $this;
+    }
+
+    /**
      * Method to authenticate
      *
      * @param  string $username
@@ -104,7 +140,8 @@ class File extends AbstractAuth
      */
     public function authenticate($username, $password)
     {
-        parent::authenticate($username, $password);
+        $this->setUsername($username);
+        $this->setPassword($password);
 
         $lines        = file($this->filename);
         $hash         = null;
