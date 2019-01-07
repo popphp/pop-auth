@@ -402,8 +402,10 @@ class Http extends AbstractAuth
         if (null === $this->response) {
             $this->response = new Http\Response();
         }
+
         $this->response->sendRequest($this->uri, $context, $contextParams);
         $this->result = (int)($this->response->getCode() == 200);
+
         return $this->result;
     }
 
