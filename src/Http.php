@@ -415,7 +415,7 @@ class Http extends AbstractAuth
      * @param  string $wwwAuth
      * @return string
      */
-    protected function parseScheme($wwwAuth)
+    public function parseScheme($wwwAuth)
     {
         $type = null;
         if (strpos($wwwAuth, ' ') !== false) {

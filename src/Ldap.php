@@ -64,7 +64,7 @@ class Ldap extends AbstractAuth
         $this->host = $host;
         $this->port = $port;
 
-        if ($host != '') {
+        if (!empty($host)) {
             $host = (null !== $this->port) ? $this->host . ':' . $this->port : $this->host;
             $this->resource = ldap_connect($host);
         }
