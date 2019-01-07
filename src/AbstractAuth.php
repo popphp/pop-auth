@@ -23,7 +23,7 @@ namespace Pop\Auth;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.1.0
  */
-abstract class AbstractAuth
+abstract class AbstractAuth implements AuthInterface
 {
 
     /**
@@ -116,6 +116,21 @@ abstract class AbstractAuth
     }
 
     /**
+     * Method to verify a password against a hash
+     *
+     * @param string $password
+     * @param string $hash
+     * @return boolean
+     */
+    public function verify($password, $hash)
+    {
+        $info = password_get_info($hash);
+
+        return ((($info['algo'] == 0) && ($info['algoName'] == 'unknown')) ?
+            ($password === $hash) : password_verify($password, $hash));
+    }
+
+    /**
      * Method to authenticate
      *
      * @param  string $username
@@ -123,20 +138,5 @@ abstract class AbstractAuth
      * @return int
      */
     abstract public function authenticate($username, $password);
-
-    /**
-     * Method to verify a password against a hash
-     *
-     * @param string $password
-     * @param string $hash
-     * @return boolean;
-     */
-    protected function verify($password, $hash)
-    {
-        $info = password_get_info($hash);
-
-        return ((($info['algo'] == 0) && ($info['algoName'] == 'unknown')) ?
-            ($password === $hash) : password_verify($password, $hash));
-    }
 
 }

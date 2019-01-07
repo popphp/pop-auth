@@ -21,19 +21,19 @@ namespace Pop\Auth;
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.0.0
+ * @version    3.1.0
  */
 class Http extends AbstractAuth
 {
 
     /**
-     * HTTP auth constants
+     * HTTP auth type constants
      */
     const AUTH_BASIC   = 'Basic';
     const AUTH_DIGEST  = 'Digest';
     const AUTH_BEARER  = 'Bearer';
-    const AUTH_REFRESH = 'Refresh';
     const AUTH_DATA    = 'Data';
+    const AUTH_REFRESH = 'Refresh';
 
     /**
      * Auth URI
@@ -84,34 +84,10 @@ class Http extends AbstractAuth
     protected $scheme = [];
 
     /**
-     * HTTP version
-     * @var string
+     * Auth response
+     * @var Http\Response
      */
-    protected $version = '1.1';
-
-    /**
-     * Response code
-     * @var int
-     */
-    protected $code = null;
-
-    /**
-     * Response message
-     * @var string
-     */
-    protected $message = null;
-
-    /**
-     * Response headers
-     * @var array
-     */
-    protected $headers = [];
-
-    /**
-     * Response body
-     * @var string
-     */
-    protected $body = null;
+    protected $response = null;
 
     /**
      * Constructor
@@ -132,11 +108,11 @@ class Http extends AbstractAuth
         $method = strtoupper($method);
 
         if (($method == 'GET') || ($method == 'POST') || ($method == 'PUT') || ($method == 'PATCH')) {
-            $this->method = $method;
+            $this->setMethod($method);
         }
 
         if (null !== $type) {
-            $this->type = $type;
+            $this->setType($type);
         }
     }
 
@@ -206,6 +182,42 @@ class Http extends AbstractAuth
     }
 
     /**
+     * Set method
+     *
+     * @param  string $method
+     * @return Http
+     */
+    public function setMethod($method)
+    {
+        $this->method = $method;
+        return $this;
+    }
+
+    /**
+     * Set type
+     *
+     * @param  string $type
+     * @return Http
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+        return $this;
+    }
+
+    /**
+     * Set auth response
+     *
+     * @param  Http\Response $response
+     * @return Http
+     */
+    public function setResponse(Http\Response $response)
+    {
+        $this->response = $response;
+        return $this;
+    }
+
+    /**
      * Get the URI
      *
      * @return string
@@ -266,6 +278,16 @@ class Http extends AbstractAuth
     }
 
     /**
+     * Get method
+     *
+     * @return string
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    /**
      * Get the auth scheme
      *
      * @return array
@@ -276,64 +298,36 @@ class Http extends AbstractAuth
     }
 
     /**
-     * Get the HTTP version
+     * Get auth response
      *
-     * @return string
+     * @return Http\Response
      */
-    public function getVersion()
+    public function getResponse()
     {
-        return $this->version;
+        return $this->response;
     }
 
     /**
-     * Get the HTTP code
+     * Initialize the auth request
      *
-     * @return string
+     * @param  string $method
+     * @return void
      */
-    public function getCode()
+    public function initRequest($method)
     {
-        return $this->code;
-    }
+        $response = new Http\Response();
+        $response->sendRequest($this->uri, ['http' => ['method' => $method]]);
 
-    /**
-     * Get the HTTP message
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return $this->message;
-    }
-
-    /**
-     * Get the HTTP response headers
-     *
-     * @return array
-     */
-    public function getHeaders()
-    {
-        return $this->headers;
-    }
-
-    /**
-     * Get an HTTP response header
-     *
-     * @param  string $name
-     * @return mixed
-     */
-    public function getHeader($name)
-    {
-        return (isset($this->headers[$name])) ? $this->headers[$name] : null;
-    }
-
-    /**
-     * Get the HTTP response body
-     *
-     * @return string
-     */
-    public function getBody()
-    {
-        return $this->body;
+        // Check for the WWW Auth header and parse it
+        if (null !== $response->getHeader('WWW-Authenticate')) {
+            $this->type = $this->parseScheme($response->getHeader('WWW-Authenticate'));
+        } else if (null !== $response->getHeader('WWW-authenticate')) {
+            $this->type = $this->parseScheme($response->getHeader('WWW-authenticate'));
+        } else if (null !== $response->getHeader('Www-Authenticate')) {
+            $this->type = $this->parseScheme($response->getHeader('Www-Authenticate'));
+        } else if (null !== $response->getHeader('www-authenticate')) {
+            $this->type = $this->parseScheme($response->getHeader('www-authenticate'));
+        }
     }
 
     /**
@@ -351,8 +345,8 @@ class Http extends AbstractAuth
         $this->setUsername($username);
         $this->setPassword($password);
 
-        if (null === $this->type) {
-            $this->generateRequest();
+        if ((null === $this->type) || (empty($this->scheme) && ($this->type == self::AUTH_DIGEST))) {
+            $this->initRequest($this->method);
         }
 
         return $this->validate($headers, $contextOptions, $contextParams);
@@ -385,88 +379,46 @@ class Http extends AbstractAuth
 
         switch ($this->type) {
             case self::AUTH_DIGEST:
-                $a1 = md5($this->username . ':' . $this->scheme['realm'] . ':' . $this->password);
-                $a2 = md5($this->method . ':' . $this->relativeUri);
-                $r  = md5($a1 . ':' . $this->scheme['nonce'] . ':' . $a2);
-                $context['http']['header'] .= 'Authorization: Digest username="' . $this->username .
-                    '", realm="' . $this->scheme['realm'] . '", nonce="' . $this->scheme['nonce'] .
-                    '", uri="' . $this->relativeUri . '", response="' . $r . '"';
+                $context['http']['header'] .= Http\AuthHeader::createDigest($this);
                 break;
-
             case self::AUTH_BASIC:
-                $context['http']['header'] .= 'Authorization: Basic ' . base64_encode($this->username . ':' . $this->password);
+                $context['http']['header'] .= Http\AuthHeader::createBasic($this);
                 break;
-
             case self::AUTH_BEARER:
-                $context['http']['header'] .= 'Authorization: Bearer ' . $this->bearerToken;
+                $context['http']['header'] .= Http\AuthHeader::createBearer($this);
                 break;
-
-            case self::AUTH_REFRESH:
-                $context['http']['header'] .= 'Authorization: Bearer ' . $this->bearerToken . "\r\n";
-                if (isset($headers['Content-Type']) && (strpos($headers['Content-Type'], 'json') !== false)) {
-                    $data = json_encode([$this->refreshTokenName => $this->refreshToken]);
-                    $context['http']['header'] .= "Content-Length: " . strlen($data) . "\r\n";
-                    $context['http']['content'] = $data;
-                } else {
-                    $data = http_build_query([$this->refreshTokenName => $this->refreshToken]);
-                    $context['http']['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n"
-                        . "Content-Length: " . strlen($data) . "\r\n";
-                    $context['http']['content'] = $data;
-                }
-
-                break;
-
-            // GET is not allowed for security reasons
             case self::AUTH_DATA:
-                $data = http_build_query(['username' => $this->username, 'password' => $this->password]);
-                $context['http']['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n"
-                    . "Content-Length: " . strlen($data) . "\r\n";
-                $context['http']['content'] = $data;
+                $dataHeader = Http\AuthHeader::createData($this);
+                $context['http']['header'] .= $dataHeader['header'];
+                $context['http']['content'] = $dataHeader['data'];
+                break;
+            case self::AUTH_REFRESH:
+                $refreshHeader = Http\AuthHeader::createRefresh($this, $headers);
+                $context['http']['header'] .= $refreshHeader['header'];
+                $context['http']['content'] = $refreshHeader['data'];
                 break;
         }
 
-        $this->sendRequest($context, $contextParams);
-        $this->result = (int)($this->code == 200);
-        return $this->result;
-    }
-
-    /**
-     * Generate the request
-     *
-     * @return void
-     */
-    public function generateRequest()
-    {
-        $context = [
-            'http' => [
-                'method' => $this->method
-            ]
-        ];
-        $this->sendRequest($context);
-
-        // Check for the WWW Auth header and parse it
-        if (isset($this->headers['WWW-Authenticate'])) {
-            $this->parseScheme($this->headers['WWW-Authenticate']);
-        } else if (isset($this->headers['WWW-authenticate'])) {
-            $this->parseScheme($this->headers['WWW-authenticate']);
-        } else if (isset($this->headers['Www-Authenticate'])) {
-            $this->parseScheme($this->headers['Www-Authenticate']);
-        } else if (isset($this->headers['Www-Authenticate'])) {
-            $this->parseScheme($this->headers['www-authenticate']);
+        if (null === $this->response) {
+            $this->response = new Http\Response();
         }
+        $this->response->sendRequest($this->uri, $context, $contextParams);
+        $this->result = (int)($this->response->getCode() == 200);
+        return $this->result;
     }
 
     /**
      * Parse the scheme
      *
      * @param  string $wwwAuth
-     * @return void
+     * @return string
      */
-    public function parseScheme($wwwAuth)
+    protected function parseScheme($wwwAuth)
     {
+        $type = null;
         if (strpos($wwwAuth, ' ') !== false) {
-            $this->type = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
-            $scheme     = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
+            $type   = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
+            $scheme = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
 
             foreach ($scheme as $sch) {
                 $sch   = trim($sch);
@@ -479,147 +431,10 @@ class Http extends AbstractAuth
                 $this->scheme[$name] = $value;
             }
         } else {
-            $this->type = $wwwAuth;
-        }
-    }
-
-    /**
-     * Send the request
-     *
-     * @param  array $context
-     * @param  array $contextParams
-     * @return void
-     */
-    protected function sendRequest(array $context = null, array $contextParams = null)
-    {
-        $http_response_header = null;
-        $firstLine            = null;
-
-        if (null !== $context) {
-            $stream = (null !== $contextParams) ?
-                @fopen($this->uri, 'r', false, stream_context_create($context, $contextParams)) :
-                @fopen($this->uri, 'r', false, stream_context_create($context));
-        } else {
-            $stream = @fopen($this->uri, 'r');
+            $type = $wwwAuth;
         }
 
-        if ($stream != false) {
-            $meta = stream_get_meta_data($stream);
-            $firstLine = $meta['wrapper_data'][0];
-            unset($meta['wrapper_data'][0]);
-            $allHeadersAry = $meta['wrapper_data'];
-            $this->body = stream_get_contents($stream);
-        } else if (null !== $http_response_header) {
-            $firstLine = $http_response_header[0];
-            unset($http_response_header[0]);
-            $allHeadersAry = $http_response_header;
-            $this->body = null;
-        }
-
-        if (null !== $firstLine) {
-            // Get the version, code and message
-            $this->version = substr($firstLine, 0, strpos($firstLine, ' '));
-            $this->version = substr($this->version, (strpos($this->version, '/') + 1));
-            preg_match('/\d\d\d/', trim($firstLine), $match);
-            $this->code    = $match[0];
-            $this->message = str_replace('HTTP/' . $this->version . ' ' . $this->code . ' ', '', $firstLine);
-
-            // Get the headers
-            foreach ($allHeadersAry as $hdr) {
-                $name = substr($hdr, 0, strpos($hdr, ':'));
-                $value = substr($hdr, (strpos($hdr, ' ') + 1));
-                $this->headers[trim($name)] = trim($value);
-            }
-
-            // If the body content is encoded, decode the body content
-            if (array_key_exists('Content-Encoding', $this->headers)) {
-                if (isset($this->headers['Transfer-Encoding']) && ($this->headers['Transfer-Encoding'] == 'chunked')) {
-                    $this->body = self::decodeChunkedBody($this->body);
-                }
-                $this->body = self::decodeBody($this->body, $this->headers['Content-Encoding']);
-            }
-        }
-    }
-
-    /**
-     * Decode the body data.
-     *
-     * @param  string $body
-     * @param  string $decode
-     * @throws Exception
-     * @return string
-     */
-    public static function decodeBody($body, $decode = 'gzip')
-    {
-        switch ($decode) {
-            // GZIP compression
-            case 'gzip':
-                if (!function_exists('gzinflate')) {
-                    throw new Exception('Gzip compression is not available.');
-                }
-                $decodedBody = gzinflate(substr($body, 10));
-                break;
-
-            // Deflate compression
-            case 'deflate':
-                if (!function_exists('gzinflate')) {
-                    throw new Exception('Deflate compression is not available.');
-                }
-                $zlibHeader = unpack('n', substr($body, 0, 2));
-                $decodedBody = ($zlibHeader[1] % 31 == 0) ? gzuncompress($body) : gzinflate($body);
-                break;
-
-            // Unknown compression
-            default:
-                $decodedBody = $body;
-
-        }
-
-        return $decodedBody;
-    }
-
-    /**
-     * Decode a chunked transfer-encoded body and return the decoded text
-     *
-     * @param string $body
-     * @return string
-     */
-    public static function decodeChunkedBody($body)
-    {
-        $decoded = '';
-
-        while($body != '') {
-            $lfPos = strpos($body, "\012");
-
-            if ($lfPos === false) {
-                $decoded .= $body;
-                break;
-            }
-
-            $chunkHex = trim(substr($body, 0, $lfPos));
-            $scPos    = strpos($chunkHex, ';');
-
-            if ($scPos !== false) {
-                $chunkHex = substr($chunkHex, 0, $scPos);
-            }
-
-            if ($chunkHex == '') {
-                $decoded .= substr($body, 0, $lfPos);
-                $body = substr($body, $lfPos + 1);
-                continue;
-            }
-
-            $chunkLength = hexdec($chunkHex);
-
-            if ($chunkLength) {
-                $decoded .= substr($body, $lfPos + 1, $chunkLength);
-                $body = substr($body, $lfPos + 2 + $chunkLength);
-            } else {
-                $body = '';
-            }
-        }
-
-        return $decoded;
+        return $type;
     }
 
 }
