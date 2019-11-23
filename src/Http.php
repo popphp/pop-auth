@@ -216,6 +216,27 @@ class Http extends AbstractAuth
     }
 
     /**
+     * Get result response
+     *
+     * @return string
+     */
+    public function getResultResponse()
+    {
+        $resultResponse = null;
+        if (($this->stream->hasResponse()) && ($this->stream->getResponse()->hasBody())) {
+            $resultResponse = $this->stream->getResponse()->getBody()->getContent();
+            if ($this->stream->getResponse()->hasHeader('Content-Type')) {
+                if ($this->stream->getResponse()->getHeader('Content-Type')->getValue() == 'application/json') {
+                    $resultResponse = json_decode($resultResponse, true);
+                } else if ($this->stream->getResponse()->getHeader('Content-Type')->getValue() == 'application/x-www-form-urlencoded') {
+                    parse_str($resultResponse, $resultResponse);
+                }
+            }
+        }
+        return $resultResponse;
+    }
+
+    /**
      * Get content type
      *
      * @return string

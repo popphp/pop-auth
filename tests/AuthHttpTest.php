@@ -32,6 +32,7 @@ class AuthHttpTest extends TestCase
         $this->assertTrue($http->hasType());
         $this->assertFalse($http->hasScheme());
         $this->assertEquals(Http::VALID, $http->authenticate('username', 'password'));
+        $this->assertNotNull($http->getResultResponse());
     }
 
     public function testSetAndGetType()
