@@ -10,126 +10,138 @@ class AuthHttpTest extends TestCase
 
     public function testConstructor()
     {
-        $http = new Http('http://www.google.com/', 'GET', Http::AUTH_BEARER);
+        $http = new Http('http://localhost/', Http::AUTH_BEARER, 'POST');
+        $http->setContentType('application/json');
         $http->setBearerToken('123456');
         $http->setRefreshToken('654321');
         $http->setRefreshTokenName('refresh_token');
         $this->assertInstanceOf('Pop\Auth\Http', $http);
+        $this->assertInstanceOf('Pop\Http\Client\Stream', $http->getStream());
+        $this->assertInstanceOf('Pop\Http\Client\Stream', $http->stream());
+        $this->assertEquals('application/json', $http->getContentType());
         $this->assertEquals('123456', $http->getBearerToken());
         $this->assertEquals('654321', $http->getRefreshToken());
         $this->assertEquals('refresh_token', $http->getRefreshTokenName());
-        $this->assertEquals(Http::VALID, $http->authenticate('username', 'password'));
-        $this->assertEquals('http://www.google.com/', $http->getUri());
-        $this->assertEquals('GET', $http->getMethod());
         $this->assertEquals(Http::AUTH_BEARER, $http->getType());
         $this->assertEquals(0, count($http->getScheme()));
-        $this->assertEquals('1.0', $http->getResponse()->getVersion());
-        $this->assertEquals('200', $http->getResponse()->getCode());
-        $this->assertEquals('OK', $http->getResponse()->getMessage());
-        $this->assertContains('text/html', $http->getResponse()->getHeader('Content-Type'));
-        $this->assertGreaterThan(1, count($http->getResponse()->getHeaders()));
-        $this->assertContains('<html', $http->getResponse()->getBody());
-    }
-
-    public function testSetAndGetRelativeUri()
-    {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->setRelativeUri('/uri');
-        $this->assertEquals('/uri', $http->getRelativeUri());
+        $this->assertTrue($http->hasStream());
+        $this->assertTrue($http->hasContentType());
+        $this->assertTrue($http->hasBearerToken());
+        $this->assertTrue($http->hasRefreshToken());
+        $this->assertTrue($http->hasRefreshTokenName());
+        $this->assertTrue($http->hasType());
+        $this->assertFalse($http->hasScheme());
+        $this->assertEquals(Http::VALID, $http->authenticate('username', 'password'));
     }
 
     public function testSetAndGetType()
     {
-        $http = new Http('http://www.google.com/', 'GET');
+        $http = new Http('http://localhost/', null, 'POST');
         $http->setType(Http::AUTH_DIGEST);
         $this->assertEquals(Http::AUTH_DIGEST, $http->getType());
     }
 
-    public function testSetAndGetResponse()
-    {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->setResponse(new Http\Response());
-        $this->assertInstanceOf('Pop\Auth\Http\Response', $http->getResponse());
-    }
-
     public function testInitRequest()
     {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->initRequest('GET');
+        $http = new Http('http://localhost/', null, 'POST');
+        $http->initRequest();
         $this->assertNull($http->getType());
     }
 
-    public function testResponse()
-    {
-        $response = new Http\Response();
-        $response->setVersion('1.1');
-        $response->setCode('200');
-        $response->setMessage('OK');
-        $response->setHeaders(['Authorization' => 'Bearer 123456']);
-        $response->setBody('Hello World');
-        $this->assertEquals('1.1', $response->getVersion());
-        $this->assertEquals('200', $response->getCode());
-        $this->assertEquals('OK', $response->getMessage());
-        $this->assertEquals('Bearer 123456', $response->getHeader('Authorization'));
-        $this->assertEquals('Hello World', $response->getBody());
-    }
-
-    public function testBasicHeader()
-    {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->setUsername('username');
-        $http->setPassword('password');
-        $this->assertContains('Authorization: Basic ', Http\AuthHeader::createBasic($http));
-    }
-
-    public function testDataHeader()
-    {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->setUsername('username');
-        $http->setPassword('password');
-        $dataHeader = Http\AuthHeader::createData($http);
-        $this->assertTrue(isset($dataHeader['header']));
-        $this->assertTrue(isset($dataHeader['data']));
-    }
-
-    public function testRefreshHeader()
-    {
-        $http = new Http('http://www.google.com/', 'GET');
-        $http->setRefreshToken('123465');
-        $dataHeaderXml  = Http\AuthHeader::createRefresh($http, ['Content-Type' => 'application/xml']);
-        $dataHeaderJson = Http\AuthHeader::createRefresh($http, ['Content-Type' => 'application/json']);
-        $this->assertTrue(isset($dataHeaderXml['header']));
-        $this->assertTrue(isset($dataHeaderXml['data']));
-        $this->assertTrue(isset($dataHeaderJson['header']));
-        $this->assertTrue(isset($dataHeaderJson['data']));
-    }
-
-    public function testConstructorBadUri()
+    public function testInitRequestException()
     {
         $this->expectException('Pop\Auth\Exception');
-        $http = new Http('localhost');
-    }
-
-    public function testDecodeBody()
-    {
-        $encodedBody = gzencode('Test body');
-        $body = Http\Response::decodeBody($encodedBody);
-        $this->assertEquals('Test body', $body);
-
-        $encodedBody = gzdeflate('Test body');
-        $body = Http\Response::decodeBody($encodedBody, 'deflate');
-        $this->assertEquals('Test body', $body);
-
-        $encodedBody = 'Test body';
-        $body = Http\Response::decodeBody($encodedBody, 'unknown');
-        $this->assertEquals('Test body', $body);
+        $http = new Http();
+        $http->initRequest();
     }
 
     public function testParseScheme()
     {
-        $http   = new Http('http://www.google.com/', 'GET');
+        $http   = new Http('http://localhost/', null, 'POST');
         $http->parseScheme('Basic realm="myRealm"');
         $this->assertEquals('myRealm', $http->getScheme()['realm']);
+    }
+
+    public function testBasic()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_BASIC, 'POST');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Basic', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testBearer()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_BEARER, 'POST');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testUrlData()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_URL_DATA, 'POST');
+        $http->setUsername('admin')
+            ->setPassword('password');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Content-Type'));
+        $this->assertEquals('application/x-www-form-urlencoded', $http->stream()->request()->getHeader('Content-Type')->getValue());
+    }
+
+    public function testFormData()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_FORM_DATA, 'POST');
+        $http->setUsername('admin')
+            ->setPassword('password');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Content-Type'));
+        $this->assertEquals('multipart/form-data', $http->stream()->request()->getHeader('Content-Type')->getValue());
+    }
+
+    public function testRefreshAsJson()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_REFRESH, 'POST');
+        $http->setContentType('application/json');
+        $http->setRefreshToken('123456789');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testRefreshAsUrlForm()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_REFRESH, 'POST');
+        $http->setContentTypeAsUrlForm();
+        $http->setRefreshToken('123456789');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testRefreshAsMultipartForm()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_REFRESH, 'POST');
+        $http->setContentTypeAsMultipartForm();
+        $http->setRefreshToken('123456789');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testDigest()
+    {
+        $http = new Http('http://localhost/', Http::AUTH_DIGEST, 'POST');
+        $http->parseScheme('Basic realm="myRealm, nonce=123456789"');
+        $http->validate();
+        $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
+        $this->assertContains('Digest', $http->stream()->request()->getHeader('Authorization')->getValue());
+    }
+
+    public function testDigestException()
+    {
+        $this->expectException('Pop\Auth\Exception');
+        $http = new Http('http://localhost/', Http::AUTH_DIGEST, 'POST');
+        $http->validate();
     }
 
 }
