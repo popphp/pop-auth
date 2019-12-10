@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "popphp/pop-db": "^4.5.7",
+        "popphp/pop-db": "^5.0.0",
         "popphp/pop-http": "^3.5.0"
     },
     "autoload": {
