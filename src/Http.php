@@ -218,7 +218,7 @@ class Http extends AbstractAuth
     /**
      * Get result response
      *
-     * @return string
+     * @return array
      */
     public function getResultResponse()
     {
