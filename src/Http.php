@@ -119,7 +119,7 @@ class Http extends AbstractAuth
      * @param  string $contentType
      * @return Http
      */
-    public function setContentType(string $contentType)
+    public function setContentType($contentType)
     {
         $this->contentType = $contentType;
         return $this;
