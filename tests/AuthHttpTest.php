@@ -68,7 +68,7 @@ class AuthHttpTest extends TestCase
         $http = new Http('http://localhost/', Http::AUTH_BASIC, 'POST');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Basic', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Basic', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testBearer()
@@ -76,7 +76,7 @@ class AuthHttpTest extends TestCase
         $http = new Http('http://localhost/', Http::AUTH_BEARER, 'POST');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testUrlData()
@@ -106,7 +106,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testRefreshAsUrlForm()
@@ -116,7 +116,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testRefreshAsMultipartForm()
@@ -126,7 +126,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testDigest()
@@ -135,7 +135,7 @@ class AuthHttpTest extends TestCase
         $http->parseScheme('Basic realm="myRealm, nonce=123456789"');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertContains('Digest', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Digest', $http->stream()->request()->getHeader('Authorization')->getValue());
     }
 
     public function testDigestException()
