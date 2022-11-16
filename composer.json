@@ -18,9 +18,9 @@
         }
     ],
     "require": {
-        "php": ">=7.3.0",
-        "popphp/pop-db": "^5.3.0",
-        "popphp/pop-http": "^4.1.0"
+        "php": ">=7.4.0",
+        "popphp/pop-db": "^5.3.4",
+        "popphp/pop-http": "^4.1.6"
     },
     "autoload": {
         "psr-4": {
