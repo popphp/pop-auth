@@ -108,7 +108,7 @@ class Ldap extends AbstractAuth
     public function setOption($option, $value)
     {
         $this->options[$option] = $value;
-        if (is_resource($this->resource)) {
+        if (is_resource($this->resource) || ($this->resource instanceof \LDAP\Connection)) {
             ldap_set_option($this->resource, $option, $value);
         }
 
@@ -203,7 +203,7 @@ class Ldap extends AbstractAuth
         $this->setUsername($username);
         $this->setPassword($password);
 
-        if (is_resource($this->resource)) {
+        if (is_resource($this->resource) || ($this->resource instanceof \LDAP\Connection)) {
             $this->result = (int)(@ldap_bind($this->resource, $this->username, $this->password));
         }
 
