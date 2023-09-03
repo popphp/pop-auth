@@ -22,7 +22,7 @@ use Pop\Http\Client;
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.0
+ * @version    3.3.3
  */
 class Http extends AbstractAuth
 {
@@ -225,10 +225,10 @@ class Http extends AbstractAuth
         $resultResponse = null;
         if (($this->stream->hasResponse()) && ($this->stream->getResponse()->hasBody())) {
             $resultResponse = $this->stream->getResponse()->getBody()->getContent();
-            if ($this->stream->getResponse()->hasHeader('Content-Type')) {
-                if ($this->stream->getResponse()->getHeader('Content-Type')->getValue() == 'application/json') {
+            if (($this->stream->getResponse()->hasHeader('Content-Type')) && (count($this->stream->getResponse()->getHeader('Content-Type')->getValues()) == 1)) {
+                if ($this->stream->getResponse()->getHeader('Content-Type')->getValue(0) == 'application/json') {
                     $resultResponse = json_decode($resultResponse, true);
-                } else if ($this->stream->getResponse()->getHeader('Content-Type')->getValue() == 'application/x-www-form-urlencoded') {
+                } else if ($this->stream->getResponse()->getHeader('Content-Type')->getValue(0) == 'application/x-www-form-urlencoded') {
                     parse_str($resultResponse, $resultResponse);
                 }
             }
@@ -383,8 +383,8 @@ class Http extends AbstractAuth
         if (($this->stream->hasResponse()) && ($this->stream->response()->hasHeaders())) {
             $wwwHeaders = ['WWW-Authenticate','WWW-authenticate','Www-Authenticate','www-authenticate'];
             foreach ($wwwHeaders as $wwwHeader) {
-                if ($this->stream->response()->hasHeader($wwwHeader)) {
-                    $this->type = $this->parseScheme($this->stream->response()->getHeader($wwwHeader)->getValue());
+                if (($this->stream->response()->hasHeader($wwwHeader)) && (count($this->stream->response()->getHeader($wwwHeader)->getValues()) == 1)) {
+                    $this->type = $this->parseScheme($this->stream->response()->getHeader($wwwHeader)->getValue(0));
                     break;
                 }
             }

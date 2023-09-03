@@ -68,7 +68,7 @@ class AuthHttpTest extends TestCase
         $http = new Http('http://localhost/', Http::AUTH_BASIC, 'POST');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Basic', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Basic', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testBearer()
@@ -76,7 +76,7 @@ class AuthHttpTest extends TestCase
         $http = new Http('http://localhost/', Http::AUTH_BEARER, 'POST');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testUrlData()
@@ -86,7 +86,7 @@ class AuthHttpTest extends TestCase
             ->setPassword('password');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Content-Type'));
-        $this->assertEquals('application/x-www-form-urlencoded', $http->stream()->request()->getHeader('Content-Type')->getValue());
+        $this->assertEquals('application/x-www-form-urlencoded', $http->stream()->request()->getHeader('Content-Type')->getValue(0));
     }
 
     public function testFormData()
@@ -96,7 +96,7 @@ class AuthHttpTest extends TestCase
             ->setPassword('password');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Content-Type'));
-        $this->assertEquals('multipart/form-data', $http->stream()->request()->getHeader('Content-Type')->getValue());
+        $this->assertEquals('multipart/form-data', $http->stream()->request()->getHeader('Content-Type')->getValue(0)->getValue());
     }
 
     public function testRefreshAsJson()
@@ -106,7 +106,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testRefreshAsUrlForm()
@@ -116,7 +116,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testRefreshAsMultipartForm()
@@ -126,7 +126,7 @@ class AuthHttpTest extends TestCase
         $http->setRefreshToken('123456789');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Bearer', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testDigest()
@@ -135,7 +135,7 @@ class AuthHttpTest extends TestCase
         $http->parseScheme('Basic realm="myRealm, nonce=123456789"');
         $http->validate();
         $this->assertTrue($http->stream()->request()->hasHeader('Authorization'));
-        $this->assertStringContainsString('Digest', $http->stream()->request()->getHeader('Authorization')->getValue());
+        $this->assertStringContainsString('Digest', $http->stream()->request()->getHeader('Authorization')->getValue(0));
     }
 
     public function testDigestException()
