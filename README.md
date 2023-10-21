@@ -31,11 +31,11 @@ BASIC USAGE
 ### Authenticate using a file
 
 For this example, we use a file called '.htmyauth' containing a colon-delimited
-list of usernames and passwords (normally, we wouldn't use clear text):
+list of usernames and passwords or password hashes:
 
-    admin:password
-    editor:12edit34
-    reader:12read34
+    admin:$2y....password hash....
+    editor:$2y....password hash....
+    reader:$2y....password hash....
 
 ```php
 use Pop\Auth;
