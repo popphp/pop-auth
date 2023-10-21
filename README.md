@@ -98,7 +98,7 @@ use Pop\Http\Auth;
 
 $auth = new Http(
     new Client('https://www.domain.com/auth', ['method' => 'post']),
-    Auth::createBasic('nick', 'password')
+    Auth::createBasic('admin', 'password')
 );
 
 $auth->authenticate('admin', 'password');
