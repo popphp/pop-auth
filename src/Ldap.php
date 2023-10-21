@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,34 +19,34 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 class Ldap extends AbstractAuth
 {
 
     /**
      * Ldap host
-     * @var string
+     * @var ?string
      */
-    protected $host = null;
+    protected ?string $host = null;
 
     /**
      * Ldap port
-     * @var string
+     * @var string|int|null
      */
-    protected $port = null;
+    protected string|int|null $port = null;
 
     /**
      * Ldap options
      * @var array
      */
-    protected $options = [];
+    protected array $options = [];
 
     /**
      * Ldap resource
-     * @var resource
+     * @var mixed
      */
     protected $resource = null;
 
@@ -55,21 +55,23 @@ class Ldap extends AbstractAuth
      *
      * Instantiate the Ldap auth adapter object
      *
-     * @param  string $host
-     * @param  string $port
-     * @param  array  $options
+     * @param  string          $host
+     * @param  string|int|null $port
+     * @param  ?array          $options
      */
-    public function __construct($host, $port = null, array $options = null)
+    public function __construct(string $host, string|int|null $port = null, ?array $options = null)
     {
-        $this->host = $host;
-        $this->port = $port;
+        $this->setHost($host);
+        if ($port !== null) {
+            $this->setPort($port);
+        }
 
         if (!empty($host)) {
-            $host = (null !== $this->port) ? $this->host . ':' . $this->port : $this->host;
+            $host = ($this->port !== null) ? $this->host . ':' . $this->port : $this->host;
             $this->resource = ldap_connect($host);
         }
 
-        if (null !== $options) {
+        if ($options !== null) {
             $this->setOptions($options);
         }
     }
@@ -78,9 +80,9 @@ class Ldap extends AbstractAuth
      * Set the host
      *
      * @param  string $host
-     * @return string
+     * @return Ldap
      */
-    public function setHost($host)
+    public function setHost(string $host): Ldap
     {
         $this->host = $host;
         return $this;
@@ -89,10 +91,10 @@ class Ldap extends AbstractAuth
     /**
      * Set the port
      *
-     * @param  string $port
+     * @param  string|int $port
      * @return Ldap
      */
-    public function setPort($port)
+    public function setPort(string|int $port): Ldap
     {
         $this->port = $port;
         return $this;
@@ -105,12 +107,10 @@ class Ldap extends AbstractAuth
      * @param  mixed $value
      * @return Ldap
      */
-    public function setOption($option, $value)
+    public function setOption(mixed $option, mixed $value): Ldap
     {
         $this->options[$option] = $value;
-        if (((phpversion() >= 8.1) && ($this->resource instanceof \LDAP\Connection)) || ((phpversion() < 8.1) && is_resource($this->resource))) {
-            ldap_set_option($this->resource, $option, $value);
-        }
+        ldap_set_option($this->resource, $option, $value);
 
         return $this;
     }
@@ -121,7 +121,7 @@ class Ldap extends AbstractAuth
      * @param  array $options
      * @return Ldap
      */
-    public function setOptions(array $options)
+    public function setOptions(array $options): Ldap
     {
         foreach ($options as $option => $value) {
             $this->setOption($option, $value);
@@ -133,9 +133,9 @@ class Ldap extends AbstractAuth
     /**
      * Get the host
      *
-     * @return string
+     * @return ?string
      */
-    public function getHost()
+    public function getHost(): ?string
     {
         return $this->host;
     }
@@ -143,9 +143,9 @@ class Ldap extends AbstractAuth
     /**
      * Get the port
      *
-     * @return string
+     * @return string|int|null
      */
-    public function getPort()
+    public function getPort(): string|int|null
     {
         return $this->port;
     }
@@ -156,9 +156,9 @@ class Ldap extends AbstractAuth
      * @param  mixed $option
      * @return mixed
      */
-    public function getOption($option)
+    public function getOption(mixed $option): mixed
     {
-        return (isset($this->options[$option])) ? $this->options[$option] : null;
+        return $this->options[$option] ?? null;
     }
 
     /**
@@ -166,7 +166,7 @@ class Ldap extends AbstractAuth
      *
      * @return array
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
@@ -174,9 +174,9 @@ class Ldap extends AbstractAuth
     /**
      * Get the Ldap resource
      *
-     * @return resource
+     * @return mixed
      */
-    public function getResource()
+    public function getResource(): mixed
     {
         return $this->resource;
     }
@@ -184,9 +184,9 @@ class Ldap extends AbstractAuth
     /**
      * Get the Ldap resource (alias)
      *
-     * @return resource
+     * @return mixed
      */
-    public function resource()
+    public function resource(): mixed
     {
         return $this->resource;
     }
@@ -198,14 +198,13 @@ class Ldap extends AbstractAuth
      * @param  string $password
      * @return int
      */
-    public function authenticate($username, $password)
+    public function authenticate(string $username, string $password): int
     {
         $this->setUsername($username);
         $this->setPassword($password);
 
-        if (((phpversion() >= 8.1) && ($this->resource instanceof \LDAP\Connection)) || ((phpversion() < 8.1) && is_resource($this->resource))) {
-            $this->result = (int)(@ldap_bind($this->resource, $this->username, $this->password));
-        }
+        $this->result = ($this->resource !== null) ?
+            (int)(@ldap_bind($this->resource, $this->username, $this->password)) : 0;
 
         return $this->result;
     }

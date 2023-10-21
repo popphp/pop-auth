@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -14,46 +14,28 @@
 namespace Pop\Auth;
 
 use Pop\Http\Client;
+use Pop\Http\Auth;
+
 /**
  * Http auth class
  *
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 class Http extends AbstractAuth
 {
 
-    /**
-     * HTTP auth type constants
-     */
-    const AUTH_BASIC     = 'BASIC';
-    const AUTH_DIGEST    = 'DIGEST';
-    const AUTH_BEARER    = 'BEARER';
-    const AUTH_URL_DATA  = 'URL_DATA';
-    const AUTH_FORM_DATA = 'FORM_DATA';
-    const AUTH_REFRESH   = 'REFRESH';
+    use AdapterUserTrait;
 
     /**
-     * Auth client stream
-     * @var Client\Stream
+     * Auth client 
+     * @var Client
      */
-    protected $stream = null;
-
-    /**
-     * Auth content type
-     * @var string
-     */
-    protected $contentType = null;
-
-    /**
-     * Auth bearer token
-     * @var string
-     */
-    protected $bearerToken = null;
+    protected $client = null;
 
     /**
      * Auth refresh token
@@ -68,94 +50,75 @@ class Http extends AbstractAuth
     protected $refreshTokenName = 'refresh';
 
     /**
-     * Auth type
-     * @var string
-     */
-    protected $type = null;
-
-    /**
-     * Scheme values
-     * @var array
-     */
-    protected $scheme = [];
-
-    /**
      * Constructor
      *
      * Instantiate the Http auth adapter object
      *
-     * @param mixed  $stream
-     * @param string $type
-     * @param string $method
      */
-    public function __construct($stream = null, $type = null, $method = 'POST')
+    public function __construct()
     {
-        if (null !== $stream) {
-            if (is_string($stream)) {
-                $stream = new Client\Stream($stream, $method);
+        $arguments = func_get_args();
+
+        foreach ($arguments as $argument) {
+            if ($argument instanceof Client) {
+                $this->setClient($argument);
+            } else if (($argument instanceof Auth) && ($this->client !== null)) {
+                $this->client->setAuth($argument);
             }
-            $this->setStream($stream);
-        }
-        if (null !== $type) {
-            $this->setType($type);
         }
     }
 
     /**
-     * Set stream
+     * Set client
      *
-     * @param  Client\Stream $stream
+     * @param  Client $client
      * @return Http
      */
-    public function setStream(Client\Stream $stream)
+    public function setClient(Client $client): Http
     {
-        $this->stream = $stream;
+        $this->client = $client;
         return $this;
     }
 
     /**
-     * Set content type
+     * Set the username
      *
-     * @param  string $contentType
+     * @param  string $username
      * @return Http
      */
-    public function setContentType($contentType)
+    public function setUsername(string $username): Http
     {
-        $this->contentType = $contentType;
+        parent::setUsername($username);
+
+        if ($this->client !== null) {
+            if ($this->client->hasAuth()) {
+                $this->client->getAuth()->setUsername($username);
+            } else {
+                $this->client->addData($this->usernameField, $username);
+            }
+        }
+
         return $this;
     }
 
     /**
-     * Set content type as URL form
+     * Set the password
      *
+     * @param  string $password
      * @return Http
      */
-    public function setContentTypeAsUrlForm()
+    public function setPassword(string $password): Http
     {
-        $this->contentType = 'application/x-www-form-urlencoded';
-        return $this;
-    }
+        parent::setPassword($password);
 
-    /**
-     * Set content type as multipart form
-     *
-     * @return Http
-     */
-    public function setContentTypeAsMultipartForm()
-    {
-        $this->contentType = 'multipart/form-data';
-        return $this;
-    }
+        if ($this->client !== null) {
+            if ($this->client->hasAuth()) {
+                $this->client->getAuth()->setPassword($password);
+            } else {
+                $this->client->addData($this->passwordField, $password);
+            }
+        }
 
-    /**
-     * Set the bearer token
-     *
-     * @param  string $bearerToken
-     * @return Http
-     */
-    public function setBearerToken($bearerToken)
-    {
-        $this->bearerToken = $bearerToken;
         return $this;
     }
 
@@ -165,9 +128,14 @@ class Http extends AbstractAuth
      * @param  string $refreshToken
      * @return Http
      */
-    public function setRefreshToken($refreshToken)
+    public function setRefreshToken(string $refreshToken): Http
     {
         $this->refreshToken = $refreshToken;
+
+        if ($this->client !== null) {
+            $this->client->setData([$this->refreshTokenName => $this->refreshToken]);
+        }
+
         return $this;
     }
 
@@ -177,83 +145,44 @@ class Http extends AbstractAuth
      * @param  string $refreshTokenName
      * @return Http
      */
-    public function setRefreshTokenName($refreshTokenName)
+    public function setRefreshTokenName(string $refreshTokenName): Http
     {
         $this->refreshTokenName = $refreshTokenName;
         return $this;
     }
 
     /**
-     * Set type
+     * Get client
      *
-     * @param  string $type
-     * @return Http
+     * @return Client
      */
-    public function setType($type)
+    public function getClient(): Client
     {
-        $this->type = $type;
-        return $this;
+        return $this->client;
     }
 
     /**
-     * Get stream
+     * Get client (alias method)
      *
-     * @return Client\Stream
+     * @return Client
      */
-    public function getStream()
+    public function client(): Client
     {
-        return $this->stream;
-    }
-
-    /**
-     * Get stream (alias method)
-     *
-     * @return Client\Stream
-     */
-    public function stream()
-    {
-        return $this->stream;
+        return $this->client;
     }
 
     /**
      * Get result response
      *
-     * @return array
+     * @return mixed
      */
-    public function getResultResponse()
+    public function getResultResponse(): mixed
     {
         $resultResponse = null;
-        if (($this->stream->hasResponse()) && ($this->stream->getResponse()->hasBody())) {
-            $resultResponse = $this->stream->getResponse()->getBody()->getContent();
-            if (($this->stream->getResponse()->hasHeader('Content-Type')) && (count($this->stream->getResponse()->getHeader('Content-Type')->getValues()) == 1)) {
-                if ($this->stream->getResponse()->getHeader('Content-Type')->getValue(0) == 'application/json') {
-                    $resultResponse = json_decode($resultResponse, true);
-                } else if ($this->stream->getResponse()->getHeader('Content-Type')->getValue(0) == 'application/x-www-form-urlencoded') {
-                    parse_str($resultResponse, $resultResponse);
-                }
-            }
+        if (($this->client->hasResponse()) && ($this->client->getResponse()->hasBody())) {
+            $resultResponse = $this->client->getResponse()->getParsedResponse();
         }
         return $resultResponse;
-    }
-
-    /**
-     * Get content type
-     *
-     * @return string
-     */
-    public function getContentType()
-    {
-        return $this->contentType;
-    }
-
-    /**
-     * Get the bearer token
-     *
-     * @return string
-     */
-    public function getBearerToken()
-    {
-        return $this->bearerToken;
     }
 
     /**
@@ -261,7 +190,7 @@ class Http extends AbstractAuth
      *
      * @return string
      */
-    public function getRefreshToken()
+    public function getRefreshToken(): string
     {
         return $this->refreshToken;
     }
@@ -271,267 +200,68 @@ class Http extends AbstractAuth
      *
      * @return string
      */
-    public function getRefreshTokenName()
+    public function getRefreshTokenName(): string
     {
         return $this->refreshTokenName;
     }
 
     /**
-     * Get the auth type
+     * Has client
      *
-     * @return string
+     * @return bool
      */
-    public function getType()
+    public function hasClient(): bool
     {
-        return $this->type;
-    }
-
-    /**
-     * Get the auth scheme
-     *
-     * @return array
-     */
-    public function getScheme()
-    {
-        return $this->scheme;
-    }
-
-    /**
-     * Has stream
-     *
-     * @return boolean
-     */
-    public function hasStream()
-    {
-        return (null !== $this->stream);
-    }
-
-    /**
-     * Has content type
-     *
-     * @return boolean
-     */
-    public function hasContentType()
-    {
-        return (null !== $this->contentType);
-    }
-
-    /**
-     * Has bearer token
-     *
-     * @return boolean
-     */
-    public function hasBearerToken()
-    {
-        return (null !== $this->bearerToken);
+        return ($this->client !== null);
     }
 
     /**
      * Has refresh token
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasRefreshToken()
+    public function hasRefreshToken():bool
     {
-        return (null !== $this->refreshToken);
+        return ($this->refreshToken !== null);
     }
 
     /**
      * Has refresh token name
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasRefreshTokenName()
+    public function hasRefreshTokenName(): bool
     {
-        return (null !== $this->refreshTokenName);
-    }
-
-    /**
-     * Has auth type
-     *
-     * @return boolean
-     */
-    public function hasType()
-    {
-        return (null !== $this->type);
-    }
-
-    /**
-     * Has an auth scheme
-     *
-     * @return boolean
-     */
-    public function hasScheme()
-    {
-        return (!empty($this->scheme));
-    }
-
-    /**
-     * Initialize the auth request
-     *
-     * @throws Exception
-     * @return void
-     */
-    public function initRequest()
-    {
-        if (null === $this->stream) {
-            throw new Exception('Error: The stream has not been set.');
-        }
-
-        $this->stream->send();
-
-        if (($this->stream->hasResponse()) && ($this->stream->response()->hasHeaders())) {
-            $wwwHeaders = ['WWW-Authenticate','WWW-authenticate','Www-Authenticate','www-authenticate'];
-            foreach ($wwwHeaders as $wwwHeader) {
-                if (($this->stream->response()->hasHeader($wwwHeader)) && (count($this->stream->response()->getHeader($wwwHeader)->getValues()) == 1)) {
-                    $this->type = $this->parseScheme($this->stream->response()->getHeader($wwwHeader)->getValue(0));
-                    break;
-                }
-            }
-        }
+        return ($this->refreshTokenName !== null);
     }
 
     /**
      * Method to authenticate
      *
-     * @param  string $username
-     * @param  string $password
-     * @param  array  $headers
-     * @param  array  $contextOptions
-     * @param  array  $contextParams
+     * @param  ?string $username
+     * @param  ?string $password
      * @return int
      */
-    public function authenticate($username, $password, array $headers = [], array $contextOptions = [], array $contextParams = [])
+    public function authenticate(?string $username = null, ?string $password = null): int
     {
-        $this->setUsername($username);
-        $this->setPassword($password);
-
-        if ((null === $this->type) || (empty($this->scheme) && ($this->type == self::AUTH_DIGEST))) {
-            $this->initRequest();
+        if ($username !== null) {
+            $this->setUsername($username);
+        }
+        if ($password !== null) {
+            $this->setPassword($password);
         }
 
-        return $this->validate($headers, $contextOptions, $contextParams);
-    }
+        $this->client->send();
+        $this->result = (int)(($this->client->hasResponse()) && ($this->client->getResponse()->isSuccess() == 200));
 
-    /**
-     * Method to validate authentication
-     *
-     * @param  array $headers
-     * @param  array $contextOptions
-     * @param  array $contextParams
-     * @return int
-     */
-    public function validate(array $headers = [], array $contextOptions = [], array $contextParams = [])
-    {
-        switch ($this->type) {
-            case self::AUTH_DIGEST:
-                $headers['Authorization'] = $this->createDigest();
-                break;
-            case self::AUTH_BASIC:
-                $headers['Authorization'] = 'Basic ' . base64_encode($this->username . ':' . $this->password);
-                break;
-            case self::AUTH_BEARER:
-                $headers['Authorization'] = 'Bearer ' . $this->bearerToken;
-                break;
-            case self::AUTH_URL_DATA:
-                $this->stream->setFields([
-                    'username' => $this->username,
-                    'password' => $this->password
-                ]);
-                $this->stream->request()->createUrlEncodedForm();
-                break;
-            case self::AUTH_FORM_DATA:
-                $this->stream->setFields([
-                    'username' => $this->username,
-                    'password' => $this->password
-                ]);
-                $this->stream->request()->createMultipartForm();
-                break;
-            case self::AUTH_REFRESH:
-                $headers['Authorization'] = 'Bearer ' . $this->bearerToken;
-                $this->stream->setFields([$this->refreshTokenName => $this->refreshToken]);
-                if ($this->contentType == 'application/json') {
-                    $this->stream->request()->createAsJson();
-                } else if ($this->contentType == 'application/x-www-form-urlencoded') {
-                    $this->stream->request()->createUrlEncodedForm();
-                } else if ($this->contentType == 'multipart/form-data') {
-                    $this->stream->request()->createMultipartForm();
-                }
-                break;
+        $response = $this->getResultResponse();
+
+        if (!empty($response) && is_array($response) && isset($response[$this->usernameField])) {
+            $this->user = $response;
         }
 
-        if (!empty($headers)) {
-            $this->stream->addRequestHeaders($headers);
-        }
-        if (!empty($contextOptions)) {
-            $this->stream->setContextOptions($contextOptions);
-        }
-        if (!empty($contextParams)) {
-            $this->stream->setContextParams($contextParams);
-        }
-
-        $this->stream->send();
-        $this->result = (int)(($this->stream->hasResponse()) && ($this->stream->response()->getCode() == 200));
         return $this->result;
-    }
 
-    /**
-     * Parse the scheme
-     *
-     * @param  string $wwwAuth
-     * @return string
-     */
-    public function parseScheme($wwwAuth)
-    {
-        $type = null;
-        if (strpos($wwwAuth, ' ') !== false) {
-            $type   = substr($wwwAuth, 0, strpos($wwwAuth, ' '));
-            $scheme = explode(', ', substr($wwwAuth, (strpos($wwwAuth, ' ') + 1)));
-
-            foreach ($scheme as $sch) {
-                $sch   = trim($sch);
-                $name  = substr($sch,0, strpos($sch, '='));
-                $value = substr($sch, (strpos($sch, '=') + 1));
-                if ((substr($value, 0, 1) == '"') && (substr($value, -1) == '"')) {
-                    $value = substr($value, 1);
-                    $value = substr($value, 0, -1);
-                }
-                $this->scheme[$name] = $value;
-            }
-        } else {
-            $type = $wwwAuth;
-        }
-
-        return $type;
-    }
-
-    /**
-     * Create auth digest header string
-     *
-     * @throws Exception
-     * @return string
-     */
-    public function createDigest()
-    {
-        $relativeUri = $this->stream->getUrl();
-        if (strpos($relativeUri, '://') !== false) {
-            $relativeUri = substr($relativeUri, (strpos($relativeUri, '://') + 3));
-        }
-        $relativeUri = substr($relativeUri, strpos($relativeUri, '/'));
-
-        $scheme = $this->getScheme();
-
-        if (!isset($scheme['realm']) || !isset($scheme['nonce'])) {
-            throw new Exception('Error: The realm and/or the nonce was not successfully parsed.');
-        }
-
-        $a1 = md5($this->username . ':' . $scheme['realm'] . ':' . $this->password);
-        $a2 = md5($this->stream->getMethod() . ':' . $relativeUri);
-        $r  = md5($a1 . ':' . $scheme['nonce'] . ':' . $a2);
-
-        return 'Digest username="' . $this->username .
-            '", realm="' . $scheme['realm'] . '", nonce="' . $scheme['nonce'] .
-            '", uri="' . $relativeUri . '", response="' . $r . '"';
     }
 
 }

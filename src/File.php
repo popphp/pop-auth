@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,46 +19,50 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 class File extends AbstractAuth
 {
 
     /**
      * Auth file
-     * @var string
+     * @var ?string
      */
-    protected $filename = null;
+    protected ?string $filename = null;
 
     /**
      * Auth realm
-     * @var string
+     * @var ?string
      */
-    protected $realm = null;
+    protected ?string $realm = null;
 
     /**
      * Auth file delimiter
      * @var string
      */
-    protected $delimiter = ':';
+    protected string $delimiter = ':';
 
     /**
      * Constructor
      *
      * Instantiate the File auth adapter object
      *
-     * @param  string $filename
-     * @param  string $realm
-     * @param  string $delimiter
+     * @param  string  $filename
+     * @param  ?string $realm
+     * @param  string  $delimiter
      * @throws Exception
      */
-    public function __construct($filename, $realm = null, $delimiter = ':')
+    public function __construct(string $filename, ?string $realm = null, string $delimiter = ':')
     {
         $this->setFilename($filename);
-        $this->realm     = $realm;
-        $this->delimiter = $delimiter;
+        if (!empty($realm)) {
+            $this->setRealm($realm);
+        }
+        if (!empty($delimiter)) {
+            $this->setDelimiter($delimiter);
+        }
     }
 
     /**
@@ -66,7 +70,7 @@ class File extends AbstractAuth
      *
      * @return string
      */
-    public function getFilename()
+    public function getFilename(): string
     {
         return $this->filename;
     }
@@ -74,9 +78,9 @@ class File extends AbstractAuth
     /**
      * Get the auth realm
      *
-     * @return string
+     * @return ?string
      */
-    public function getRealm()
+    public function getRealm(): ?string
     {
         return $this->realm;
     }
@@ -86,7 +90,7 @@ class File extends AbstractAuth
      *
      * @return string
      */
-    public function getDelimiter()
+    public function getDelimiter(): string
     {
         return $this->delimiter;
     }
@@ -98,7 +102,7 @@ class File extends AbstractAuth
      * @throws Exception
      * @return File
      */
-    public function setFilename($filename)
+    public function setFilename(string $filename): File
     {
         if (!file_exists($filename)) {
             throw new Exception("The access file '" . $filename . "' does not exist.");
@@ -113,7 +117,7 @@ class File extends AbstractAuth
      * @param  string $realm
      * @return File
      */
-    public function setRealm($realm)
+    public function setRealm(string $realm): File
     {
         $this->realm = $realm;
         return $this;
@@ -125,7 +129,7 @@ class File extends AbstractAuth
      * @param  string $delimiter
      * @return File
      */
-    public function setDelimiter($delimiter)
+    public function setDelimiter(string $delimiter): File
     {
         $this->delimiter = $delimiter;
         return $this;
@@ -138,7 +142,7 @@ class File extends AbstractAuth
      * @param  string $password
      * @return int
      */
-    public function authenticate($username, $password)
+    public function authenticate(string $username, string $password): int
     {
         $this->setUsername($username);
         $this->setPassword($password);
@@ -151,7 +155,7 @@ class File extends AbstractAuth
             $line = trim($line);
             $user = explode($this->delimiter, $line);
             if (isset($user[0]) && ($user[0] == $this->username)) {
-                if ((null !== $this->realm) && (count($user) == 3)) {
+                if (($this->realm !== null) && (count($user) == 3)) {
                     if (($this->username == $user[0]) && ($user[1] == $this->realm)) {
                         $hash = $user[2];
                         break;
@@ -165,7 +169,7 @@ class File extends AbstractAuth
             }
         }
 
-        if ((null !== $this->password) && (null !== $hash)) {
+        if (($this->password !== null) && ($hash !== null)) {
             $this->result = (int)$this->verify($this->password, $hash);
         }
 

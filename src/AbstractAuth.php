@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 abstract class AbstractAuth implements AuthInterface
 {
@@ -37,26 +37,26 @@ abstract class AbstractAuth implements AuthInterface
      * Authentication result
      * @var int
      */
-    protected $result = 0;
+    protected int $result = 0;
 
     /**
      * Authentication username
-     * @var string
+     * @var ?string
      */
-    protected $username = null;
+    protected ?string $username = null;
 
     /**
      * Authentication password
-     * @var string
+     * @var ?string
      */
-    protected $password = null;
+    protected ?string $password = null;
 
     /**
      * Get the authentication result
      *
      * @return int
      */
-    public function getResult()
+    public function getResult(): int
     {
         return $this->result;
     }
@@ -64,9 +64,9 @@ abstract class AbstractAuth implements AuthInterface
     /**
      * Determine if the authentication attempt was valid
      *
-     * @return boolean
+     * @return bool
      */
-    public function isValid()
+    public function isValid(): bool
     {
         return ($this->result == 1);
     }
@@ -74,9 +74,9 @@ abstract class AbstractAuth implements AuthInterface
     /**
      * Get the username
      *
-     * @return string
+     * @return ?string
      */
-    public function getUsername()
+    public function getUsername(): ?string
     {
         return $this->username;
     }
@@ -84,9 +84,9 @@ abstract class AbstractAuth implements AuthInterface
     /**
      * Get the password
      *
-     * @return string
+     * @return ?string
      */
-    public function getPassword()
+    public function getPassword(): ?string
     {
         return $this->password;
     }
@@ -97,7 +97,7 @@ abstract class AbstractAuth implements AuthInterface
      * @param  string $username
      * @return AbstractAuth
      */
-    public function setUsername($username)
+    public function setUsername(string $username): AbstractAuth
     {
         $this->username = $username;
         return $this;
@@ -109,7 +109,7 @@ abstract class AbstractAuth implements AuthInterface
      * @param  string $password
      * @return AbstractAuth
      */
-    public function setPassword($password)
+    public function setPassword(string $password): AbstractAuth
     {
         $this->password = $password;
         return $this;
@@ -118,11 +118,11 @@ abstract class AbstractAuth implements AuthInterface
     /**
      * Method to verify a password against a hash
      *
-     * @param string $password
-     * @param string $hash
-     * @return boolean
+     * @param  string $password
+     * @param  string $hash
+     * @return bool
      */
-    public function verify($password, $hash)
+    public function verify(string $password, string $hash): bool
     {
         $info = password_get_info($hash);
 
@@ -137,6 +137,6 @@ abstract class AbstractAuth implements AuthInterface
      * @param  string $password
      * @return int
      */
-    abstract public function authenticate($username, $password);
+    abstract public function authenticate(string $username, string $password): int;
 
 }

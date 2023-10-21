@@ -19,6 +19,12 @@ Install `pop-auth` using Composer.
 
     composer require popphp/pop-auth
 
+Or, require it in your composer.json file
+
+    "require": {
+        "popphp/pop-auth" : "^4.0.0"
+    }
+
 BASIC USAGE
 -----------
 

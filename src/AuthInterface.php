@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 interface AuthInterface
 {
@@ -31,28 +31,28 @@ interface AuthInterface
      *
      * @return int
      */
-    public function getResult();
+    public function getResult(): int;
 
     /**
      * Determine if the authentication attempt was valid
      *
-     * @return boolean
+     * @return bool
      */
-    public function isValid();
+    public function isValid(): bool;
 
     /**
      * Get the username
      *
-     * @return string
+     * @return ?string
      */
-    public function getUsername();
+    public function getUsername(): ?string;
 
     /**
      * Get the password
      *
-     * @return string
+     * @return ?string
      */
-    public function getPassword();
+    public function getPassword(): ?string;
 
     /**
      * Set the username
@@ -60,7 +60,7 @@ interface AuthInterface
      * @param  string $username
      * @return AuthInterface
      */
-    public function setUsername($username);
+    public function setUsername(string $username): AuthInterface;
 
     /**
      * Set the password
@@ -68,7 +68,7 @@ interface AuthInterface
      * @param  string $password
      * @return AuthInterface
      */
-    public function setPassword($password);
+    public function setPassword(string $password): AuthInterface;
 
     /**
      * Method to authenticate
@@ -77,15 +77,15 @@ interface AuthInterface
      * @param  string $password
      * @return int
      */
-    public function authenticate($username, $password);
+    public function authenticate(string $username, string $password): int;
 
     /**
      * Method to verify a password against a hash
      *
      * @param string $password
      * @param string $hash
-     * @return boolean
+     * @return bool
      */
-    public function verify($password, $hash);
+    public function verify(string $password, string $hash): bool;
 
 }

@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,36 +19,20 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.3.3
+ * @version    4.0.0
  */
 class Table extends AbstractAuth
 {
 
+    use AdapterUserTrait;
+
     /**
      * DB table name/class name
-     * @var string
+     * @var ?string
      */
-    protected $table = null;
-
-    /**
-     * Username field
-     * @var string
-     */
-    protected $usernameField = 'username';
-
-    /**
-     * Password field
-     * @var string
-     */
-    protected $passwordField = 'password';
-
-    /**
-     * User record
-     * @var mixed
-     */
-    protected $user = null;
+    protected ?string $table = null;
 
     /**
      * Constructor
@@ -59,11 +43,15 @@ class Table extends AbstractAuth
      * @param  string $usernameField
      * @param  string $passwordField
      */
-    public function __construct($table, $usernameField = 'username', $passwordField = 'password')
+    public function __construct(string $table, string $usernameField = 'username', string $passwordField = 'password')
     {
         $this->table         = $table;
-        $this->usernameField = $usernameField;
-        $this->passwordField = $passwordField;
+        if (!empty($usernameField)) {
+            $this->setUsernameField($usernameField);
+        }
+        if (!empty($passwordField)) {
+            $this->setPasswordField($passwordField);
+        }
     }
 
     /**
@@ -71,29 +59,9 @@ class Table extends AbstractAuth
      *
      * @return string
      */
-    public function getTable()
+    public function getTable(): string
     {
         return $this->table;
-    }
-
-    /**
-     * Get the username field
-     *
-     * @return string
-     */
-    public function getUsernameField()
-    {
-        return $this->usernameField;
-    }
-
-    /**
-     * Get the password field
-     *
-     * @return string
-     */
-    public function getPasswordField()
-    {
-        return $this->passwordField;
     }
 
     /**
@@ -102,44 +70,10 @@ class Table extends AbstractAuth
      * @param  string $table
      * @return Table
      */
-    public function setTable($table)
+    public function setTable(string $table): Table
     {
         $this->table = $table;
         return $this;
-    }
-
-    /**
-     * Set the username field
-     *
-     * @param  string $usernameField
-     * @return Table
-     */
-    public function setUsernameField($usernameField)
-    {
-        $this->usernameField = $usernameField;
-        return $this;
-    }
-
-    /**
-     * Set the password field
-     *
-     * @param  string $passwordField
-     * @return Table
-     */
-    public function setPasswordField($passwordField)
-    {
-        $this->passwordField = $passwordField;
-        return $this;
-    }
-
-    /**
-     * Get the user record
-     *
-     * @return mixed
-     */
-    public function getUser()
-    {
-        return $this->user;
     }
 
     /**
@@ -149,7 +83,7 @@ class Table extends AbstractAuth
      * @param  string $password
      * @return int
      */
-    public function authenticate($username, $password)
+    public function authenticate(string $username, string $password): int
     {
         $this->setUsername($username);
         $this->setPassword($password);
@@ -160,8 +94,8 @@ class Table extends AbstractAuth
             $this->usernameField => $this->username
         ]);
 
-        if ((null !== $this->password) && isset($this->user->{$this->passwordField}) &&
-            (null !== $this->user->{$this->passwordField})) {
+        if (($this->password !== null) && isset($this->user->{$this->passwordField}) &&
+            ($this->user->{$this->passwordField} !== null)) {
             $this->result = (int)$this->verify($this->password, $this->user->{$this->passwordField});
         }
 
