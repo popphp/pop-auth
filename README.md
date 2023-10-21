@@ -33,9 +33,9 @@ BASIC USAGE
 For this example, we use a file called '.htmyauth' containing a colon-delimited
 list of usernames and passwords or password hashes:
 
-    admin:$2y....password hash....
-    editor:$2y....password hash....
-    reader:$2y....password hash....
+    admin:PASSWORD_HASH
+    editor:PASSWORD_HASH
+    reader:PASSWORD_HASH
 
 ```php
 use Pop\Auth;
