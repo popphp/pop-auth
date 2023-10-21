@@ -33,7 +33,7 @@ BASIC USAGE
 For this example, we use a file called '.htmyauth' containing a colon-delimited
 list of usernames and passwords (normally, we wouldn't use clear text):
 
-    admin:12admin34
+    admin:password
     editor:12edit34
     reader:12read34
 
@@ -41,7 +41,7 @@ list of usernames and passwords (normally, we wouldn't use clear text):
 use Pop\Auth;
 
 $auth = new Auth\File('/path/to/.htmyauth');
-$auth->authenticate('admin', '12admin34');
+$auth->authenticate('admin', 'password');
 
 if ($auth->isValid()) { } // Returns true
 ```
@@ -67,7 +67,7 @@ $auth->authenticate('admin', 'bad-password');
 if ($auth->isValid()) { }
 
 // Attempt #2
-$auth->authenticate('admin', '12admin34');
+$auth->authenticate('admin', 'password');
 
 // Returns true because the value of the hashed attempted
 // password matches the hash in the database
@@ -77,14 +77,48 @@ if ($auth->isValid()) { }
 ### Authenticate using HTTP
 
 In this example, the user can simply authenticate using a remote server over HTTP.
-Based on the headers received from the initial request, the Http adapter will
-auto-detect most things, like the the auth type (Basic or Digest), content encoding, etc.
+The following example will set the username and password at POST data in the payload.
 
 ```php
-use Pop\Auth;
+use Pop\Auth\Http;
+use Pop\Http\Client;
 
-$auth = new Auth\Http('https://www.domain.com/auth', 'post');
-$auth->authenticate('admin', '12admin34');
+$auth = new Http(new Client('https://www.domain.com/auth', ['method' => 'post']));
+$auth->authenticate('admin', 'password');
+
+if ($auth->isValid()) { } // Returns true
+```
+
+The following example will use a basic authorization header:
+
+```php
+use Pop\Auth\Http;
+use Pop\Http\Client;
+use Pop\Http\Auth;
+
+$auth = new Http(
+    new Client('https://www.domain.com/auth', ['method' => 'post']),
+    Auth::createBasic('nick', 'password')
+);
+
+$auth->authenticate('admin', 'password');
+
+if ($auth->isValid()) { } // Returns true
+```
+
+The following example will use a bearer token authorization header:
+
+```php
+use Pop\Auth\Http;
+use Pop\Http\Client;
+use Pop\Http\Auth;
+
+$auth = new Http(
+    new Client('https://www.domain.com/auth', ['method' => 'post']),
+    Auth::createBearer('AUTH_TOKEN')
+);
+
+$auth->authenticate('admin', 'password');
 
 if ($auth->isValid()) { } // Returns true
 ```
@@ -99,7 +133,7 @@ to communicate with the LDAP server.
 use Pop\Auth;
 
 $auth = new Auth\Ldap('ldap.domain', 389, [LDAP_OPT_PROTOCOL_VERSION => 3]);
-$auth->authenticate('admin', '12admin34');
+$auth->authenticate('admin', 'password');
 
 if ($auth->isValid()) { } // Returns true
 ```
