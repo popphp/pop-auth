@@ -38,18 +38,6 @@ class Http extends AbstractAuth
     protected $client = null;
 
     /**
-     * Auth refresh token
-     * @var string
-     */
-    protected $refreshToken = null;
-
-    /**
-     * Auth refresh token name
-     * @var string
-     */
-    protected $refreshTokenName = 'refresh';
-
-    /**
      * Constructor
      *
      * Instantiate the Http auth adapter object
@@ -123,35 +111,6 @@ class Http extends AbstractAuth
     }
 
     /**
-     * Set the refresh token
-     *
-     * @param  string $refreshToken
-     * @return Http
-     */
-    public function setRefreshToken(string $refreshToken): Http
-    {
-        $this->refreshToken = $refreshToken;
-
-        if ($this->client !== null) {
-            $this->client->setData([$this->refreshTokenName => $this->refreshToken]);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set the refresh token name
-     *
-     * @param  string $refreshTokenName
-     * @return Http
-     */
-    public function setRefreshTokenName(string $refreshTokenName): Http
-    {
-        $this->refreshTokenName = $refreshTokenName;
-        return $this;
-    }
-
-    /**
      * Get client
      *
      * @return Client
@@ -185,25 +144,6 @@ class Http extends AbstractAuth
         return $resultResponse;
     }
 
-    /**
-     * Get the refresh token
-     *
-     * @return string
-     */
-    public function getRefreshToken(): string
-    {
-        return $this->refreshToken;
-    }
-
-    /**
-     * Get the refresh token name
-     *
-     * @return string
-     */
-    public function getRefreshTokenName(): string
-    {
-        return $this->refreshTokenName;
-    }
 
     /**
      * Has client
@@ -213,26 +153,6 @@ class Http extends AbstractAuth
     public function hasClient(): bool
     {
         return ($this->client !== null);
-    }
-
-    /**
-     * Has refresh token
-     *
-     * @return bool
-     */
-    public function hasRefreshToken():bool
-    {
-        return ($this->refreshToken !== null);
-    }
-
-    /**
-     * Has refresh token name
-     *
-     * @return bool
-     */
-    public function hasRefreshTokenName(): bool
-    {
-        return ($this->refreshTokenName !== null);
     }
 
     /**
