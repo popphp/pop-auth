@@ -62,7 +62,7 @@ if ($auth->authenticate('admin', 'password')) {
 }
 ```
 
-If you need to reference the authentication attempt result at a later time in the application, 
+If you need to reference the same authentication attempt result at a later time in the application, 
 you can call `isAuthenticated()`:
 
 ```php
@@ -97,11 +97,12 @@ if ($auth->isAuthenticated()) { } // Returns bool
 Using a Database
 ----------------
 
-Using the table adapter, you would need to create a table in a database. There would need to be a
-correlating table class  that extends 'Pop\Db\Record' (for more on this, visit the `pop-db` component.)
+Using the table adapter, you would need to create a table in a database that stores the users.
+There would need to be a correlating table class  that extends 'Pop\Db\Record' (for more on this,
+visit the `pop-db` component.)
 
-For simplicity, the table has been named `MyApp\Table\Users` and has a column called 'username' and
-a column called 'password', but those column names can be changed.
+For simplicity, the table class has been named `MyApp\Table\Users` and has a column called
+'username' and a column called 'password', but those column names can be changed.
 
 ```php
 use Pop\Auth;
