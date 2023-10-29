@@ -102,7 +102,7 @@ There would need to be a correlating table class  that extends `Pop\Db\Record` (
 visit the `pop-db` component.)
 
 For simplicity, the table class has been named `MyApp\Table\Users` and has a column called
-'username' and a column called 'password', but those column names can be changed.
+`username` and a column called `password`, but those column names can be changed.
 
 ```php
 use Pop\Auth;
