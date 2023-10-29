@@ -14,6 +14,7 @@ pop-auth
 * [Using a Database](#using-a-databse)
 * [Using HTTP](#using-http)
 * [Using LDAP](#using-ldap)
+* [Getting the User](#getting-the-user)
 
 Overview
 --------
@@ -211,5 +212,26 @@ $auth->authenticate('admin', 'password');
 
 if ($auth->isAuthenticated()) { } // Returns true
 ```
+
+[Top](#pop-auth)
+
+Getting the User
+----------------
+
+Both the table and HTTP adapters have a method that allow you to get any possible user data that
+may have been returned. That method is `getUser()`:
+
+```php
+use Pop\Auth;
+
+$auth = new Auth\Table('MyApp\Table\Users');
+$auth->authenticate('admin', 'password'); // int
+
+if ($auth->isAuthenticated()) {
+    $user = $auth->getUser();
+}
+```
+
+This allows you access to the authenticated user's data without having to make an additional request. 
 
 [Top](#pop-auth)

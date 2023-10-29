@@ -13,7 +13,7 @@ class AuthTest extends TestCase
         $file = new File(__DIR__ . '/tmp/access.txt');
         $file->authenticate('admin_bcrypt', '12admin34');
         $this->assertEquals(1, $file->getResult());
-        $this->assertTrue($file->isValid());
+        $this->assertTrue($file->isAuthenticated());
         $this->assertEquals('admin_bcrypt', $file->getUsername());
         $this->assertEquals('12admin34', $file->getPassword());
     }
