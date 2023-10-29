@@ -98,7 +98,7 @@ Using a Database
 ----------------
 
 Using the table adapter, you would need to create a table in a database that stores the users.
-There would need to be a correlating table class  that extends 'Pop\Db\Record' (for more on this,
+There would need to be a correlating table class  that extends `Pop\Db\Record` (for more on this,
 visit the `pop-db` component.)
 
 For simplicity, the table class has been named `MyApp\Table\Users` and has a column called
