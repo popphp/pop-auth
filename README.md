@@ -4,15 +4,31 @@ pop-auth
 [![Build Status](https://github.com/popphp/pop-auth/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-auth/actions)
 [![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-auth)](http://cc.popphp.org/pop-auth/)
 
-OVERVIEW
+[![Join the chat at https://popphp.slack.com](https://media.popphp.org/img/slack.svg)](https://popphp.slack.com)
+[![Join the chat at https://discord.gg/D9JBxPa5](https://media.popphp.org/img/discord.svg)](https://discord.gg/D9JBxPa5)
+
+* [Overview](#overview)
+* [Install](#install)
+* [Quickstart](#quickstart)
+* [Using a File](#using-a-file)
+* [Using a Database](#using-a-databse)
+* [Using HTTP](#using-http)
+* [Using LDAP](#using-ldap)
+
+Overview
 --------
-`pop-auth` provides integrated adapters to authenticate users with a file, a database,
-over HTTP or with a LDAP server. It also includes support for authenticating using
-encrypted passwords.
+`pop-auth` provides adapters to authenticate users via different authentication sources.
+The adapters share the same interface and are interchangeable. The available available
+adapters are:
+
+- File
+- Database
+- HTTP
+- LDAP
 
 `pop-auth` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
-INSTALL
+Install
 -------
 
 Install `pop-auth` using Composer.
@@ -25,58 +41,97 @@ Or, require it in your composer.json file
         "popphp/pop-auth" : "^4.0.0"
     }
 
-BASIC USAGE
------------
+[Top](#pop-auth)
 
-### Authenticate using a file
+Quickstart
+----------
 
-For this example, we use a file called '.htmyauth' containing a colon-delimited
-list of usernames and passwords or password hashes:
-
-    admin:PASSWORD_HASH
-    editor:PASSWORD_HASH
-    reader:PASSWORD_HASH
+To verify an authentication attempt, create a new auth object pointed at its authentication source.
+From there, you can attempt to call the `authenticate()` with a username and password.
 
 ```php
 use Pop\Auth;
 
 $auth = new Auth\File('/path/to/.htmyauth');
-$auth->authenticate('admin', 'password');
 
-if ($auth->isValid()) { } // Returns true
+if ($auth->authenticate('admin', 'password')) {
+    // User is authenticated
+} else {
+    // Handle failed authentication attempt
+}
 ```
 
-### Authenticate using a table in a database
+If you need to reference the authentication attempt result at a later time in the application, 
+you can call `isAuthenticated()`:
 
-For this example, there is a table in a database called 'users' and a correlating table class
-called 'MyApp\Users' that extends 'Pop\Db\Record' (for more on this, visit the Pop Db component.)
+```php
+var_dump($auth->isAuthenticated()); // bool
+```
 
-For simplicity, the table has a column called 'username' and a column called 'password',
-but those field names can be changed.
+[Top](#pop-auth)
+
+Using a File
+------------
+
+Using the file adapter, you would need to create we use a file containing a colon-delimited
+list of usernames and passwords or, preferably, password hashes:
+
+```text
+testuser1:PASSWORD_HASH1
+testuser2:PASSWORD_HASH2
+testuser3:PASSWORD_HASH3
+```
 
 ```php
 use Pop\Auth;
 
-$auth = new Auth\Table('MyApp\Users');
+$auth = new Auth\File('/path/to/.htmyauth');
+$auth->authenticate('testuser1', 'password'); // Return int
 
-// Attempt #1
-$auth->authenticate('admin', 'bad-password');
-
-// Returns false because the value of the hashed attempted
-// password does not match the hash in the database
-if ($auth->isValid()) { }
-
-// Attempt #2
-$auth->authenticate('admin', 'password');
-
-// Returns true because the value of the hashed attempted
-// password matches the hash in the database
-if ($auth->isValid()) { }
+if ($auth->isAuthenticated()) { } // Returns bool
 ```
 
-### Authenticate using HTTP
+[Top](#pop-auth)
 
-In this example, the user can simply authenticate using a remote server over HTTP.
+Using a Database
+----------------
+
+Using the table adapter, you would need to create a table in a database. There would need to be a
+correlating table class  that extends 'Pop\Db\Record' (for more on this, visit the `pop-db` component.)
+
+For simplicity, the table has been named `MyApp\Table\Users` and has a column called 'username' and
+a column called 'password', but those column names can be changed.
+
+```php
+use Pop\Auth;
+
+$auth = new Auth\Table('MyApp\Table\Users');
+$auth->authenticate('admin', 'password'); // int
+
+if ($auth->isAuthenticated()) { } // bool
+```
+
+If the username/password fields are called something different in the table, that can be changed:
+
+```php
+use Pop\Auth;
+
+$auth = new Auth\Table('MyApp\Table\Users');
+$auth->setUsernameField('user_name')
+    ->setPasswordField('password_hash');
+
+$auth->authenticate('admin', 'password'); // int
+
+if ($auth->isAuthenticated()) { } // bool
+```
+
+[Top](#pop-auth)
+
+Using HTTP
+----------
+
+Using the HTTP adapter, the user can send an authentication request over HTTP to a remote server.
+It will utilize the `Pop\Http\Client` and its supporting classes from the `pop-http` component.
 The following example will set the username and password at POST data in the payload.
 
 ```php
@@ -84,9 +139,9 @@ use Pop\Auth\Http;
 use Pop\Http\Client;
 
 $auth = new Http(new Client('https://www.domain.com/auth', ['method' => 'post']));
-$auth->authenticate('admin', 'password');
+$auth->authenticate('admin', 'password'); // Returns int
 
-if ($auth->isValid()) { } // Returns true
+if ($auth->isAuthenticated()) { } // Returns bool
 ```
 
 The following example will use a basic authorization header:
@@ -101,9 +156,9 @@ $auth = new Http(
     Auth::createBasic('admin', 'password')
 );
 
-$auth->authenticate('admin', 'password');
+$auth->authenticate('admin', 'password'); // Returns int
 
-if ($auth->isValid()) { } // Returns true
+if ($auth->isAuthenticated()) { } // Returns bool
 ```
 
 The following example will use a bearer token authorization header:
@@ -120,14 +175,33 @@ $auth = new Http(
 
 $auth->authenticate('admin', 'password');
 
-if ($auth->isValid()) { } // Returns true
+if ($auth->isAuthenticated()) { } // Returns true
 ```
 
-### Authenticate using LDAP
+Like the Table adapter, if the username/password fields need to be set to something different
+to meet the requirements of the HTTP server, you can do that:
 
-Again, in this example, the user can simply authenticate using a remote server, but this
-time, using LDAP. The user can set the port and other various options that may be necessary
-to communicate with the LDAP server.
+```php
+use Pop\Auth\Http;
+use Pop\Http\Client;
+
+$auth = new Http(new Client('https://www.domain.com/auth', ['method' => 'post']));
+$auth->setUsernameField('user_name')
+    ->setPasswordField('password_hash');
+
+$auth->authenticate('admin', 'password'); // Returns int
+
+if ($auth->isAuthenticated()) { } // Returns bool
+```
+
+[Top](#pop-auth)
+
+Using LDAP
+----------
+
+Using the LDAP adapter, the user can send an authentication request using LDAP to a remote server.
+The user can set the port and other various options that may be necessary to communicate with the
+LDAP server.
 
 ```php
 use Pop\Auth;
@@ -135,5 +209,7 @@ use Pop\Auth;
 $auth = new Auth\Ldap('ldap.domain', 389, [LDAP_OPT_PROTOCOL_VERSION => 3]);
 $auth->authenticate('admin', 'password');
 
-if ($auth->isValid()) { } // Returns true
+if ($auth->isAuthenticated()) { } // Returns true
 ```
+
+[Top](#pop-auth)

@@ -62,11 +62,11 @@ abstract class AbstractAuth implements AuthInterface
     }
 
     /**
-     * Determine if the authentication attempt was valid
+     * Determine if the authentication attempt was successful
      *
      * @return bool
      */
-    public function isValid(): bool
+    public function isAuthenticated(): bool
     {
         return ($this->result == 1);
     }

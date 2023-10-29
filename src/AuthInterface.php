@@ -34,11 +34,11 @@ interface AuthInterface
     public function getResult(): int;
 
     /**
-     * Determine if the authentication attempt was valid
+     * Determine if the authentication attempt was successful
      *
      * @return bool
      */
-    public function isValid(): bool;
+    public function isAuthenticated(): bool;
 
     /**
      * Get the username
