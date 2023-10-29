@@ -134,7 +134,7 @@ Using HTTP
 
 Using the HTTP adapter, the user can send an authentication request over HTTP to a remote server.
 It will utilize the `Pop\Http\Client` and its supporting classes from the `pop-http` component.
-The following example will set the username and password at POST data in the payload.
+The following example will set the username and password as POST data in the payload.
 
 ```php
 use Pop\Auth\Http;
@@ -153,11 +153,12 @@ use Pop\Auth\Http;
 use Pop\Http\Client;
 use Pop\Http\Auth;
 
-$auth = new Http(
-    new Client('https://www.domain.com/auth', ['method' => 'post']),
+$client = new Client(
+    'https://www.domain.com/auth', ['method' => 'post'],
     Auth::createBasic('admin', 'password')
-);
+); 
 
+$auth = new Http($client);
 $auth->authenticate('admin', 'password'); // Returns int
 
 if ($auth->isAuthenticated()) { } // Returns bool
@@ -170,11 +171,12 @@ use Pop\Auth\Http;
 use Pop\Http\Client;
 use Pop\Http\Auth;
 
-$auth = new Http(
-    new Client('https://www.domain.com/auth', ['method' => 'post']),
+$client = new Client(
+    'https://www.domain.com/auth', ['method' => 'post'],
     Auth::createBearer('AUTH_TOKEN')
 );
 
+$auth = new Http($client);
 $auth->authenticate('admin', 'password');
 
 if ($auth->isAuthenticated()) { } // Returns true
