@@ -11,7 +11,7 @@ pop-auth
 * [Install](#install)
 * [Quickstart](#quickstart)
 * [Using a File](#using-a-file)
-* [Using a Database](#using-a-databse)
+* [Using a Database](#using-a-database)
 * [Using HTTP](#using-http)
 * [Using LDAP](#using-ldap)
 * [Getting the User](#getting-the-user)
