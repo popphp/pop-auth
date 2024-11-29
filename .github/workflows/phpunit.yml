@@ -26,14 +26,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    #- name: Validate composer.json and composer.lock
-    #  run: composer validate
-
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: ldap
+
+      #- name: Validate composer.json and composer.lock
+      #  run: composer validate
 
     - name: Cache Composer packages
       id: composer-cache
