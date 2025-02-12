@@ -38,7 +38,7 @@ Install `pop-auth` using Composer.
 Or, require it in your composer.json file
 
     "require": {
-        "popphp/pop-auth" : "^4.0.1"
+        "popphp/pop-auth" : "^4.0.2"
     }
 
 [Top](#pop-auth)
