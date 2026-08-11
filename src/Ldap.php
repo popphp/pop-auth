@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.0.3
+ * @version    5.0.0
  */
 class Ldap extends AbstractAuth
 {
@@ -67,8 +67,8 @@ class Ldap extends AbstractAuth
         }
 
         if (!empty($host)) {
-            $host = ($this->port !== null) ? $this->host . ':' . $this->port : $this->host;
-            $this->resource = ldap_connect($host);
+            $uri = ($this->port !== null) ? 'ldap://' . $this->host . ':' . $this->port : $this->host;
+            $this->resource = ldap_connect($uri);
         }
 
         if ($options !== null) {
@@ -196,15 +196,21 @@ class Ldap extends AbstractAuth
      *
      * @param  string $username
      * @param  string $password
+     * @throws Exception
      * @return int
      */
     public function authenticate(string $username, string $password): int
     {
+        $this->needsRehash = false;
+
+        if ($this->resource === null) {
+            throw new Exception('No LDAP resource is available to bind against.');
+        }
+
         $this->setUsername($username);
         $this->setPassword($password);
 
-        $this->result = ($this->resource !== null) ?
-            (int)(@ldap_bind($this->resource, $this->username, $this->password)) : 0;
+        $this->result = (int)(@ldap_bind($this->resource, $this->username, $this->password));
 
         return $this->result;
     }

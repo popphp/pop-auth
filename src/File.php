@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.0.3
+ * @version    5.0.0
  */
 class File extends AbstractAuth
 {
@@ -140,6 +140,7 @@ class File extends AbstractAuth
      *
      * @param  string $username
      * @param  string $password
+     * @throws Exception
      * @return int
      */
     public function authenticate(string $username, string $password): int
@@ -147,9 +148,15 @@ class File extends AbstractAuth
         $this->setUsername($username);
         $this->setPassword($password);
 
-        $lines        = file($this->filename);
-        $hash         = null;
-        $this->result = 0;
+        $lines = @file($this->filename);
+
+        if ($lines === false) {
+            throw new Exception("The access file '" . $this->filename . "' could not be read.");
+        }
+
+        $hash              = null;
+        $this->result      = 0;
+        $this->needsRehash = false;
 
         foreach ($lines as $line) {
             $line = trim($line);

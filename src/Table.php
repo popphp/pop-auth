@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.0.3
+ * @version    5.0.0
  */
 class Table extends AbstractAuth
 {
@@ -81,6 +81,7 @@ class Table extends AbstractAuth
      *
      * @param  string $username
      * @param  string $password
+     * @throws Exception
      * @return int
      */
     public function authenticate(string $username, string $password): int
@@ -88,11 +89,17 @@ class Table extends AbstractAuth
         $this->setUsername($username);
         $this->setPassword($password);
 
-        $table        = $this->table;
-        $this->result = 0;
-        $this->user   = $table::findOne([
-            $this->usernameField => $this->username
-        ]);
+        $table             = $this->table;
+        $this->result      = 0;
+        $this->needsRehash = false;
+
+        try {
+            $this->user = $table::findOne([
+                $this->usernameField => $this->username
+            ]);
+        } catch (\Throwable $e) {
+            throw new Exception('Unable to query the user table: ' . $e->getMessage(), 0, $e);
+        }
 
         if (($this->password !== null) && isset($this->user->{$this->passwordField}) &&
             ($this->user->{$this->passwordField} !== null)) {

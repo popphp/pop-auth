@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -22,9 +22,9 @@ use Pop\Http\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.0.3
+ * @version    5.0.0
  */
 class Http extends AbstractAuth
 {
@@ -160,10 +160,17 @@ class Http extends AbstractAuth
      *
      * @param  ?string $username
      * @param  ?string $password
+     * @throws Exception
      * @return int
      */
     public function authenticate(?string $username = null, ?string $password = null): int
     {
+        $this->needsRehash = false;
+
+        if (!$this->hasClient()) {
+            throw new Exception('No HTTP client has been set.');
+        }
+
         if ($username !== null) {
             $this->setUsername($username);
         }
@@ -171,7 +178,12 @@ class Http extends AbstractAuth
             $this->setPassword($password);
         }
 
-        $this->client->send();
+        try {
+            $this->client->send();
+        } catch (\Throwable $e) {
+            throw new Exception('Unable to send the HTTP authentication request: ' . $e->getMessage(), 0, $e);
+        }
+
         $this->result = (int)(($this->client->hasResponse()) && ($this->client->getResponse()->isSuccess() == 200));
 
         $response = $this->getResultResponse();

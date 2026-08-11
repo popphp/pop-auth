@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Auth;
  * @category   Pop
  * @package    Pop\Auth
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.0.3
+ * @version    5.0.0
  */
 abstract class AbstractAuth implements AuthInterface
 {
@@ -38,6 +38,12 @@ abstract class AbstractAuth implements AuthInterface
      * @var int
      */
     protected int $result = 0;
+
+    /**
+     * Whether the last verified hash should be rehashed
+     * @var bool
+     */
+    protected bool $needsRehash = false;
 
     /**
      * Authentication username
@@ -69,6 +75,16 @@ abstract class AbstractAuth implements AuthInterface
     public function isAuthenticated(): bool
     {
         return ($this->result == 1);
+    }
+
+    /**
+     * Determine if the last verified hash should be rehashed
+     *
+     * @return bool
+     */
+    public function needsRehash(): bool
+    {
+        return $this->needsRehash;
     }
 
     /**
@@ -124,10 +140,13 @@ abstract class AbstractAuth implements AuthInterface
      */
     public function verify(string $password, string $hash): bool
     {
-        $info = password_get_info($hash);
+        $info       = password_get_info($hash);
+        $isUnhashed = (($info['algo'] == 0) && ($info['algoName'] == 'unknown'));
+        $result     = $isUnhashed ? hash_equals($hash, $password) : password_verify($password, $hash);
 
-        return ((($info['algo'] == 0) && ($info['algoName'] == 'unknown')) ?
-            ($password === $hash) : password_verify($password, $hash));
+        $this->needsRehash = $result && ($isUnhashed || password_needs_rehash($hash, PASSWORD_DEFAULT));
+
+        return $result;
     }
 
     /**

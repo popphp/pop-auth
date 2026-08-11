@@ -3,6 +3,7 @@
 namespace Pop\Auth\Test;
 
 use Pop\Auth\Table;
+use Pop\Auth\Exception;
 use Pop\Db;
 use PHPUnit\Framework\TestCase;
 
@@ -42,6 +43,33 @@ class AuthTableTest extends TestCase
         $table = new Table('Pop\Auth\Test\TestAsset\Users');
         $table->setPasswordField('password2');
         $this->assertEquals('password2', $table->getPasswordField());
+    }
+
+    public function testAuthenticateThrowsWithBadTableClass()
+    {
+        $this->expectException(Exception::class);
+        $table = new Table('Pop\Auth\Test\TestAsset\NonExistentUsers');
+        $table->authenticate('admin', '12admin34');
+    }
+
+    public function testAuthenticateReturnsNotValidWhenUserNotFound()
+    {
+        $db = Db\Db::sqliteConnect(['database' => __DIR__ . '/tmp/access.sqlite']);
+        Db\Record::setDb($db);
+
+        $table = new Table('Pop\Auth\Test\TestAsset\Users');
+        $this->assertEquals(Table::NOT_VALID, $table->authenticate('nobody', 'whatever'));
+        $this->assertFalse($table->isAuthenticated());
+    }
+
+    public function testAuthenticateReturnsNotValidWithWrongPassword()
+    {
+        $db = Db\Db::sqliteConnect(['database' => __DIR__ . '/tmp/access.sqlite']);
+        Db\Record::setDb($db);
+
+        $table = new Table('Pop\Auth\Test\TestAsset\Users');
+        $this->assertEquals(Table::NOT_VALID, $table->authenticate('admin', 'wrong-password'));
+        $this->assertFalse($table->isAuthenticated());
     }
 
 }
