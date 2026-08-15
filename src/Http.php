@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pop PHP Framework (https://www.popphp.org/)
  *
@@ -14,6 +15,7 @@
 namespace Pop\Auth;
 
 use Pop\Http\Client;
+use Pop\Http\Client\Response;
 use Pop\Http\Auth;
 
 /**
@@ -138,8 +140,9 @@ class Http extends AbstractAuth
     public function getResultResponse(): mixed
     {
         $resultResponse = null;
-        if (($this->client->hasResponse()) && ($this->client->getResponse()->hasBody())) {
-            $resultResponse = $this->client->getResponse()->getParsedResponse();
+        $response       = $this->client->hasResponse() ? $this->client->getResponse() : null;
+        if (($response instanceof Response) && $response->hasBody()) {
+            $resultResponse = $response->getParsedResponse();
         }
         return $resultResponse;
     }

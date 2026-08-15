@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pop PHP Framework (https://www.popphp.org/)
  *
@@ -101,8 +102,7 @@ class Table extends AbstractAuth
             throw new Exception('Unable to query the user table: ' . $e->getMessage(), 0, $e);
         }
 
-        if (($this->password !== null) && isset($this->user->{$this->passwordField}) &&
-            ($this->user->{$this->passwordField} !== null)) {
+        if (isset($this->user->{$this->passwordField})) {
             $this->result = (int)$this->verify($this->password, $this->user->{$this->passwordField});
         }
 

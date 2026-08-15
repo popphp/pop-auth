@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pop PHP Framework (https://www.popphp.org/)
  *
@@ -161,7 +162,7 @@ class File extends AbstractAuth
         foreach ($lines as $line) {
             $line = trim($line);
             $user = explode($this->delimiter, $line);
-            if (isset($user[0]) && ($user[0] == $this->username)) {
+            if ($user[0] == $this->username) {
                 if (($this->realm !== null) && (count($user) == 3)) {
                     if (($this->username == $user[0]) && ($user[1] == $this->realm)) {
                         $hash = $user[2];
