@@ -13,7 +13,6 @@ pop-auth
 * [Using a File](#using-a-file)
 * [Using a Database](#using-a-database)
 * [Using HTTP](#using-http)
-* [Using LDAP](#using-ldap)
 * [Getting the User](#getting-the-user)
 * [Rehashing Passwords](#rehashing-passwords)
 
@@ -26,7 +25,6 @@ adapters are:
 - File
 - Database
 - HTTP
-- LDAP
 
 `pop-auth` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
@@ -77,8 +75,8 @@ Handling Exceptions
 
 `authenticate()` returning `0` means the credentials were checked and didn't match — that's a normal, expected
 outcome, not an error. It can also throw `Pop\Auth\Exception`, but only when the adapter can't perform the check
-at all: a missing or unreadable file, a bad database table class or connection, no HTTP client configured (or a
-transport-level failure sending the request), or no LDAP resource to bind against. Wrap `authenticate()` in a
+at all: a missing or unreadable file, a bad database table class or connection, or no HTTP client configured (or
+a transport-level failure sending the request). Wrap `authenticate()` in a
 try/catch to handle both cases:
 
 ```php
@@ -251,29 +249,6 @@ if ($auth->isAuthenticated()) { } // Returns bool
 
 [Top](#pop-auth)
 
-Using LDAP
-----------
-
-Using the LDAP adapter, the user can send an authentication request using LDAP to a remote server.
-The user can set the port and other various options that may be necessary to communicate with the
-LDAP server.
-
-The LDAP adapter binds directly with whatever username is passed to `authenticate()` — it does not
-search the directory for a matching entry first. Against most real directories, that means the
-"username" needs to be a full bind DN (e.g. `cn=admin,dc=example,dc=com`) or a UPN (e.g.
-`admin@example.com`), not a bare username, unless your server is configured to accept one directly.
-
-```php
-use Pop\Auth;
-
-$auth = new Auth\Ldap('ldap.domain', 389, [LDAP_OPT_PROTOCOL_VERSION => 3]);
-$auth->authenticate('cn=admin,dc=example,dc=com', 'password');
-
-if ($auth->isAuthenticated()) { } // Returns bool
-```
-
-[Top](#pop-auth)
-
 Getting the User
 ----------------
 
@@ -314,7 +289,7 @@ if ($auth->isAuthenticated() && $auth->needsRehash()) {
 ```
 
 This is only meaningful for the File and Table adapters, since they're the ones that compare a
-submitted password against a stored hash. The HTTP and LDAP adapters never compare hashes directly —
-`needsRehash()` is always `false` on those.
+submitted password against a stored hash. The HTTP adapter never compares hashes directly —
+`needsRehash()` is always `false` on it.
 
 [Top](#pop-auth)
