@@ -19,8 +19,8 @@
     ],
     "require": {
         "php": ">=8.4.0",
-        "popphp/pop-db": "^7.0.0-beta.1",
-        "popphp/pop-http": "^6.0.0-beta.4"
+        "popphp/pop-db": "^7.0.0",
+        "popphp/pop-http": "^6.0.0"
     },
     "autoload": {
         "psr-4": {
