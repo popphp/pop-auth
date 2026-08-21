@@ -38,6 +38,12 @@ class Jwt extends AbstractAuth
     const ALGORITHMS = ['HS256', 'RS256', 'ES256'];
 
     /**
+     * Expected byte length of a raw ES256 (P-256) JOSE signature: 32-byte R + 32-byte S (RFC 7518 §3.4)
+     * @var int
+     */
+    const ES256_SIGNATURE_LENGTH = 64;
+
+    /**
      * Algorithm
      * @var string
      */
@@ -156,7 +162,8 @@ class Jwt extends AbstractAuth
             $verified = match ($this->algorithm) {
                 'HS256' => Verifier::hmac($signingInput, $signature, $this->key),
                 'RS256' => Verifier::rsa($signingInput, $signature, $this->key),
-                'ES256' => Verifier::ec($signingInput, self::esSignatureToDer($signature), $this->key),
+                'ES256' => (strlen($signature) === self::ES256_SIGNATURE_LENGTH)
+                    && Verifier::ec($signingInput, self::esSignatureToDer($signature), $this->key),
                 default => throw new Exception('Unsupported algorithm.'),
             };
         } catch (\Throwable $e) {
