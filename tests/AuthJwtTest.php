@@ -299,4 +299,28 @@ class AuthJwtTest extends TestCase
         $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($token));
     }
 
+    public function testUsernameAndPasswordFieldAccessorsDefaultToUsernameAndPassword()
+    {
+        $auth = new Jwt('HS256', 'secret');
+        $this->assertEquals('username', $auth->getUsernameField());
+        $this->assertEquals('password', $auth->getPasswordField());
+    }
+
+    public function testSetUsernameFieldAndSetPasswordFieldAreFluentAndPersist()
+    {
+        $auth = new Jwt('HS256', 'secret');
+
+        $this->assertSame($auth, $auth->setUsernameField('sub'));
+        $this->assertSame($auth, $auth->setPasswordField('cred'));
+
+        $this->assertEquals('sub', $auth->getUsernameField());
+        $this->assertEquals('cred', $auth->getPasswordField());
+    }
+
+    public function testGetUserDefaultsToNullBeforeAuthenticating()
+    {
+        $auth = new Jwt('HS256', 'secret');
+        $this->assertNull($auth->getUser());
+    }
+
 }
