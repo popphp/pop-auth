@@ -235,4 +235,68 @@ class AuthJwtTest extends TestCase
         $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($token));
     }
 
+    public function testMalformedBase64SegmentDoesNotAuthenticateAsMutatedToken()
+    {
+        $secret = 'my-shared-secret';
+        $token  = $this->buildHmacToken(['alg' => 'HS256', 'typ' => 'JWT'], ['sub' => 'admin'], $secret);
+
+        // Appending an invalid-alphabet character to the signature segment must not decode to a
+        // still-verifiable signature (non-strict base64_decode would silently drop the '*').
+        $mutatedToken = $token . '*';
+
+        $auth = new Jwt('HS256', $secret);
+        $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($mutatedToken));
+    }
+
+    public function testArrayAudienceContainingConfiguredValuePasses()
+    {
+        $secret = 'my-shared-secret';
+        $token  = $this->buildHmacToken(
+            ['alg' => 'HS256', 'typ' => 'JWT'],
+            ['sub' => 'admin', 'aud' => ['my-api', 'other-api']],
+            $secret
+        );
+
+        $auth = new Jwt('HS256', $secret);
+        $auth->setAudience('my-api');
+        $this->assertEquals(Jwt::VALID, $auth->authenticate($token));
+    }
+
+    public function testGetUserIsClearedAfterSubsequentFailedAuthenticate()
+    {
+        $secret     = 'my-shared-secret';
+        $validToken = $this->buildHmacToken(['alg' => 'HS256', 'typ' => 'JWT'], ['sub' => 'admin'], $secret);
+
+        [$header, , $signature] = explode('.', $validToken);
+        $tamperedPayload = $this->base64UrlEncode(json_encode(['sub' => 'root']));
+        $tamperedToken   = "$header.$tamperedPayload.$signature";
+
+        $auth = new Jwt('HS256', $secret);
+        $this->assertEquals(Jwt::VALID, $auth->authenticate($validToken));
+        $this->assertEquals(['sub' => 'admin'], $auth->getUser());
+
+        $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($tamperedToken));
+        $this->assertNull($auth->getUser());
+    }
+
+    public function testRs256WrongKeypairSignatureFails()
+    {
+        [$privateKeyA]           = $this->generateKeyPair('rsa');
+        [, $publicKeyB]          = $this->generateKeyPair('rsa');
+        $token = $this->buildAsymmetricToken(['alg' => 'RS256', 'typ' => 'JWT'], ['sub' => 'admin'], $privateKeyA);
+
+        $auth = new Jwt('RS256', $publicKeyB);
+        $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($token));
+    }
+
+    public function testEs256WrongKeypairSignatureFails()
+    {
+        [$privateKeyA]  = $this->generateKeyPair('ec');
+        [, $publicKeyB] = $this->generateKeyPair('ec');
+        $token = $this->buildAsymmetricToken(['alg' => 'ES256', 'typ' => 'JWT'], ['sub' => 'admin'], $privateKeyA, true);
+
+        $auth = new Jwt('ES256', $publicKeyB);
+        $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($token));
+    }
+
 }

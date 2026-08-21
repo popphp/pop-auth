@@ -140,6 +140,7 @@ class Jwt extends AbstractAuth
     {
         $this->result      = self::NOT_VALID;
         $this->needsRehash = false;
+        $this->user        = null;
 
         $segments = explode('.', $token);
         if (count($segments) !== 3) {
@@ -198,8 +199,11 @@ class Jwt extends AbstractAuth
             return false;
         }
 
-        if (($this->audience !== null) && (($payload['aud'] ?? null) !== $this->audience)) {
-            return false;
+        if ($this->audience !== null) {
+            $aud = $payload['aud'] ?? null;
+            if (!in_array($this->audience, is_array($aud) ? $aud : [$aud], true)) {
+                return false;
+            }
         }
 
         if (($this->issuer !== null) && (($payload['iss'] ?? null) !== $this->issuer)) {
@@ -217,8 +221,9 @@ class Jwt extends AbstractAuth
      */
     protected static function base64UrlDecode(string $data): string
     {
-        $padded = str_pad($data, strlen($data) + ((4 - (strlen($data) % 4)) % 4), '=');
-        return (string)base64_decode(strtr($padded, '-_', '+/'));
+        $padded  = str_pad($data, strlen($data) + ((4 - (strlen($data) % 4)) % 4), '=');
+        $decoded = base64_decode(strtr($padded, '-_', '+/'), true);
+        return ($decoded === false) ? '' : $decoded;
     }
 
     /**
