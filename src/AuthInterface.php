@@ -81,12 +81,12 @@ interface AuthInterface
     /**
      * Method to authenticate
      *
-     * @param  string $username
-     * @param  string $password
+     * @param  string  $credential
+     * @param  ?string $secondary
      * @throws Exception
      * @return int
      */
-    public function authenticate(string $username, string $password): int;
+    public function authenticate(string $credential, ?string $secondary = null): int;
 
     /**
      * Method to verify a password against a hash

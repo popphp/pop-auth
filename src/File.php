@@ -139,14 +139,22 @@ class File extends AbstractAuth
     /**
      * Method to authenticate
      *
-     * @param  string $username
-     * @param  string $password
+     * @param  string  $username
+     * @param  ?string $password
      * @throws Exception
      * @return int
      */
-    public function authenticate(string $username, string $password): int
+    public function authenticate(string $username, ?string $password = null): int
     {
         $this->setUsername($username);
+
+        $this->result      = 0;
+        $this->needsRehash = false;
+
+        if ($password === null) {
+            return $this->result;
+        }
+
         $this->setPassword($password);
 
         $lines = @file($this->filename);
@@ -155,9 +163,7 @@ class File extends AbstractAuth
             throw new Exception("The access file '" . $this->filename . "' could not be read.");
         }
 
-        $hash              = null;
-        $this->result      = 0;
-        $this->needsRehash = false;
+        $hash = null;
 
         foreach ($lines as $line) {
             $line = trim($line);
