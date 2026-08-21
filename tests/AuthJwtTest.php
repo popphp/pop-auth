@@ -222,4 +222,17 @@ class AuthJwtTest extends TestCase
         $auth->authenticate($token);
     }
 
+    public function testOversizedEs256SignatureFailsWithoutThrowing()
+    {
+        [, $publicKey] = $this->generateKeyPair('ec');
+
+        $headerB64    = $this->base64UrlEncode(json_encode(['alg' => 'ES256', 'typ' => 'JWT']));
+        $payloadB64   = $this->base64UrlEncode(json_encode(['sub' => 'admin']));
+        $oversizedSig = $this->base64UrlEncode(str_repeat('A', 300));
+        $token        = "$headerB64.$payloadB64.$oversizedSig";
+
+        $auth = new Jwt('ES256', $publicKey);
+        $this->assertEquals(Jwt::NOT_VALID, $auth->authenticate($token));
+    }
+
 }
