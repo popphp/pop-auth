@@ -153,10 +153,10 @@ abstract class AbstractAuth implements AuthInterface
     /**
      * Method to authenticate
      *
-     * @param  string $username
-     * @param  string $password
+     * @param  string  $credential
+     * @param  ?string $secondary
      * @return int
      */
-    abstract public function authenticate(string $username, string $password): int;
+    abstract public function authenticate(string $credential, ?string $secondary = null): int;
 
 }

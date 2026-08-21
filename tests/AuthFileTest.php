@@ -115,4 +115,11 @@ class AuthFileTest extends TestCase
         }
     }
 
+    public function testAuthenticateReturnsNotValidWhenPasswordIsNull()
+    {
+        $file = new File(__DIR__ . '/tmp/access.txt');
+        $this->assertEquals(File::NOT_VALID, $file->authenticate('admin', null));
+        $this->assertFalse($file->isAuthenticated());
+    }
+
 }
