@@ -11,8 +11,7 @@ pop-auth
 * [Quickstart](#quickstart)
 * [Handling Exceptions](#handling-exceptions)
 * [Using a File](#using-a-file)
-* [Using a Database](#using-a-database)
-* [Using HTTP](#using-http)
+* [Using a JWT](#using-a-jwt)
 * [Getting the User](#getting-the-user)
 * [Rehashing Passwords](#rehashing-passwords)
 
@@ -23,10 +22,16 @@ The adapters share the same interface and are interchangeable. The available
 adapters are:
 
 - File
-- Database
-- HTTP
+- JWT
 
 `pop-auth` is a component of the [Pop PHP Framework](http://www.popphp.org/).
+
+> Database-backed authentication (matching a username/password against a `Pop\Db\Record`-backed table) has
+> moved to the `pop-db` component, in favor of a tighter coupling with the DB layer it depends on. See
+> `pop-db`'s documentation for the replacement.
+
+> Remote/delegated authentication (forwarding credentials to a remote HTTP endpoint and checking the response)
+> is no longer a dedicated adapter here — use `pop-http`'s `Client` and `Auth` classes directly.
 
 Install
 -------
@@ -75,9 +80,8 @@ Handling Exceptions
 
 `authenticate()` returning `0` means the credentials were checked and didn't match — that's a normal, expected
 outcome, not an error. It can also throw `Pop\Auth\Exception`, but only when the adapter can't perform the check
-at all: a missing or unreadable file, a bad database table class or connection, or no HTTP client configured (or
-a transport-level failure sending the request). Wrap `authenticate()` in a
-try/catch to handle both cases:
+at all: a missing or unreadable file, or malformed/unusable key material for the JWT adapter. Wrap
+`authenticate()` in a try/catch to handle both cases:
 
 ```php
 use Pop\Auth;
@@ -139,112 +143,43 @@ A different delimiter can be set as the third constructor argument, e.g.
 
 [Top](#pop-auth)
 
-Using a Database
-----------------
+Using a JWT
+-----------
 
-Using the table adapter, you would need to create a table in a database that stores the users.
-There would need to be a correlating table class that extends `Pop\Db\Record` (for more on this,
-visit the `pop-db` component.)
+Using the JWT adapter, you authenticate a bearer token by verifying its signature and claims — there's no
+network call and no stored username/password, just the token itself and the key material to check it against.
 
-For simplicity, the table class has been named `MyApp\Table\Users` and has a column called
-`username` and a column called `password`, but those column names can be changed.
+The algorithm is fixed at construction and is never read from the token — pass the shared secret for `HS256`,
+or a PEM-encoded public key for `RS256`/`ES256`:
 
 ```php
-use Pop\Auth;
+use Pop\Auth\Jwt;
 
-$auth = new Auth\Table('MyApp\Table\Users');
-$auth->authenticate('admin', 'password'); // Returns int
+$auth = new Jwt('HS256', $secret);
+$auth->authenticate($token); // Returns int
 
 if ($auth->isAuthenticated()) { } // Returns bool
 ```
 
-If the username/password fields are called something different in the table, that can be changed:
-
 ```php
-use Pop\Auth;
+use Pop\Auth\Jwt;
 
-$auth = new Auth\Table('MyApp\Table\Users');
-$auth->setUsernameField('user_name')
-    ->setPasswordField('password_hash');
-
-$auth->authenticate('admin', 'password'); // Returns int
-
-if ($auth->isAuthenticated()) { } // Returns bool
+$auth = new Jwt('RS256', $publicKeyPem);
+$auth->authenticate($token); // Returns int
 ```
 
-[Top](#pop-auth)
-
-Using HTTP
-----------
-
-Using the HTTP adapter, the user can send an authentication request over HTTP to a remote server.
-It will utilize the `Pop\Http\Client` and its supporting classes from the `pop-http` component.
-The following example will set the username and password as POST data in the payload.
-
-The `Http` constructor also accepts a `Pop\Http\Auth` object directly instead of building it into the
-`Client`, e.g. `new Http($client, $auth)` — but the `Client` must be passed first. Passing the `Auth`
-object before the `Client` silently drops it rather than raising an error.
+`exp` and `nbf` claims, when present on the token, are always checked (with an optional leeway, in seconds, to
+absorb clock skew between issuer and verifier). `aud` and `iss` are opt-in — only checked if you configure them:
 
 ```php
-use Pop\Auth\Http;
-use Pop\Http\Client;
+use Pop\Auth\Jwt;
 
-$auth = new Http(new Client('https://www.domain.com/auth', ['method' => 'post']));
-$auth->authenticate('admin', 'password'); // Returns int
+$auth = new Jwt('HS256', $secret);
+$auth->setAudience('my-api')
+    ->setIssuer('https://auth.example.com')
+    ->setLeeway(30);
 
-if ($auth->isAuthenticated()) { } // Returns bool
-```
-
-The following example will use a basic authorization header:
-
-```php
-use Pop\Auth\Http;
-use Pop\Http\Client;
-use Pop\Http\Auth;
-
-$client = new Client(
-    'https://www.domain.com/auth', ['method' => 'post'],
-    Auth::createBasic('admin', 'password')
-); 
-
-$auth = new Http($client);
-$auth->authenticate('admin', 'password'); // Returns int
-
-if ($auth->isAuthenticated()) { } // Returns bool
-```
-
-The following example will use a bearer token authorization header:
-
-```php
-use Pop\Auth\Http;
-use Pop\Http\Client;
-use Pop\Http\Auth;
-
-$client = new Client(
-    'https://www.domain.com/auth', ['method' => 'post'],
-    Auth::createBearer('AUTH_TOKEN')
-);
-
-$auth = new Http($client);
-$auth->authenticate('admin', 'password'); // Returns int
-
-if ($auth->isAuthenticated()) { } // Returns bool
-```
-
-Like the Table adapter, if the username/password fields need to be set to something different
-to meet the requirements of the HTTP server, you can do that:
-
-```php
-use Pop\Auth\Http;
-use Pop\Http\Client;
-
-$auth = new Http(new Client('https://www.domain.com/auth', ['method' => 'post']));
-$auth->setUsernameField('user_name')
-    ->setPasswordField('password_hash');
-
-$auth->authenticate('admin', 'password'); // Returns int
-
-if ($auth->isAuthenticated()) { } // Returns bool
+$auth->authenticate($token); // Returns int
 ```
 
 [Top](#pop-auth)
@@ -252,21 +187,21 @@ if ($auth->isAuthenticated()) { } // Returns bool
 Getting the User
 ----------------
 
-Both the table and HTTP adapters have a method that allow you to get any possible user data that
-may have been returned. That method is `getUser()`:
+The JWT adapter has a method that allows you to get the decoded claims from a successfully verified token.
+That method is `getUser()`:
 
 ```php
-use Pop\Auth;
+use Pop\Auth\Jwt;
 
-$auth = new Auth\Table('MyApp\Table\Users');
-$auth->authenticate('admin', 'password'); // Returns int
+$auth = new Jwt('HS256', $secret);
+$auth->authenticate($token); // Returns int
 
 if ($auth->isAuthenticated()) {
-    $user = $auth->getUser();
+    $claims = $auth->getUser();
 }
 ```
 
-This allows you access to the authenticated user's data without having to make an additional request. 
+This allows you access to the token's claims without decoding it yourself.
 
 [Top](#pop-auth)
 
@@ -288,8 +223,8 @@ if ($auth->isAuthenticated() && $auth->needsRehash()) {
 }
 ```
 
-This is only meaningful for the File and Table adapters, since they're the ones that compare a
-submitted password against a stored hash. The HTTP adapter never compares hashes directly —
+This is only meaningful for the File adapter, since it's the one that compares a submitted
+password against a stored hash. The JWT adapter verifies a signature instead of a hash —
 `needsRehash()` is always `false` on it.
 
 [Top](#pop-auth)
