@@ -2,7 +2,7 @@ pop-auth
 ========
 
 [![Build Status](https://github.com/popphp/pop-auth/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-auth/actions)
-[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-auth)](http://cc.popphp.org/pop-auth/)
+[![Coverage Status](https://cc.popphp.org/coverage.php?comp=pop-auth)](https://cc.popphp.org/pop-auth/)
 
 [![Join the chat at https://discord.gg/TZjgT74U7E](https://media.popphp.org/img/discord.svg)](https://discord.gg/TZjgT74U7E)
 
@@ -24,7 +24,7 @@ adapters are:
 - File
 - JWT
 
-`pop-auth` is a component of the [Pop PHP Framework](http://www.popphp.org/).
+`pop-auth` is a component of the [Pop PHP Framework](https://www.popphp.org/).
 
 > Database-backed authentication (matching a username/password against a `Pop\Db\Record`-backed table) has
 > moved to the `pop-db` component, in favor of a tighter coupling with the DB layer it depends on. See
